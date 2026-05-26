@@ -129,8 +129,8 @@ def show_logo():
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
         try:
-            # חזרה לפקודה מובנית ונקייה שמונעת שגיאות סינטקס
-            st.image("צילום מסך 2026-05-26 151245.png", use_container_width=True)
+            # עדכון השם לקובץ הלוגו החדש
+            st.image("logo.jpeg", use_container_width=True)
         except:
             st.warning("לוגו MiluiMate לא נמצא בתיקייה.")
 
@@ -175,10 +175,8 @@ def soldier_page():
     st.markdown(f"<h2 style='text-align: center;'>שלום {user_name}, שלח את העדפותיך במערכת MiluiMate</h2>", unsafe_allow_html=True)
     
     with st.form("constraints_form"):
-        # תפקידים מעודכנים לפי הדרישה
         role = st.selectbox("תפקיד בכוח:", ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט"])
-        # תבניות יציאה מעודכנות לפי הדרישה
-        request_type = st.selectbox("סוג/תבנית יציאה מבוקשת:", ["יומי", "שבוע-שבוע", "חמשש", "יומיים"])
+        request_type = st.selectbox("סוג/תבנית יציאה מבוקשת:", ["יומי", "שבוע-שבוע", "חמשו\"ש", "יומיים"])
         dates = st.date_input("תאריכים מבוקשים ליציאה:")
         submit_req = st.form_submit_button("שלח בקשה למפקד")
         
@@ -202,13 +200,11 @@ def commander_page():
             min_forces = st.number_input("סד\"כ לוחמים מינימלי חובה בבסיס (בכל יום):", min_value=1, value=15)
             planning_days = st.number_input("טווח תכנון הסבב (בימים):", min_value=7, value=14)
         with col2:
-            # תבניות יציאה מעודכנות לבחירת המפקד
-            exit_format = st.selectbox("תבנית יציאות מועדפת לכוח:", ["יומי", "שבוע-שבוע", "חמשש", "יומיים"])
+            exit_format = st.selectbox("תבנית יציאות מועדפת לכוח:", ["יומי", "שבוע-שבוע", "חמשו\"ש", "יומיים"])
         
         st.markdown("---")
         st.markdown("### 🗂️ דרישת בעלי תפקידים חיוניים (נוכחות חובה בכל יום)")
         
-        # התאמת תיבות הקלט לתפקידים החדשים
         col_role1, col_role2, col_role3, col_role4, col_role5 = st.columns(5)
         with col_role1:
             min_commanders = st.number_input("מפקדי כיתות:", min_value=0, value=3)
@@ -242,7 +238,6 @@ def commander_page():
             
             st.markdown("<br>### 📅 לוח שיבוץ יציאות אופטימלי (טיוטה ראשונית למפקד)", unsafe_allow_html=True)
             
-            # טבלה מעודכנת עם התפקידים החדשים
             mock_data = {
                 "שם החייל": ["רועי", "דניאל", "יוסי", "אביב", "איתי", "נועם"],
                 "תפקיד בכוח": ["חובש", "נגביסט", "מפקד כיתה", "קלע", "נהג", "קלע"],
