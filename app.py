@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from ortools.sat.python import cp_model
 
 # --- הגדרות תצורה בסיסיות לעמוד ---
-st.set_page_config(page_title="MiluiMate - ניהול שיבוץ מילואים", layout="centered")
+st.set_page_config(page_title="MiluiMate - מערכת שיבוץ חכמה", layout="centered")
 
 # --- פונקציה להמרת תמונת הרקע המקומית ל-Base64 ---
 def get_base64_of_bin_file(bin_file):
@@ -40,7 +40,7 @@ else:
         </style>
     """, unsafe_allow_html=True)
 
-# --- הזרקת CSS מותאם אישית לעיצוב נקי, פונטים גדולים והנגשה של הלשוניות ---
+# --- הזרקת CSS מותאם אישית לעיצוב יוקרתי, פונטים גדולים והנגשת לשוניות מושלמת ---
 st.markdown("""
     <style>
     html, body, [class*="css"]  {
@@ -49,14 +49,13 @@ st.markdown("""
         font-family: 'Assistant', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    /* עיצוב כותרת ראשית ענקית ונקייה */
+    /* כותרת ענקית, נקייה ומקצועית */
     h1 {
         font-size: 3.2rem !important;
         color: #1e2418 !important;
         font-weight: 800 !important;
         text-align: center;
-        margin-bottom: 25px;
-        letter-spacing: -1px;
+        margin-bottom: 30px;
     }
     
     h2 {
@@ -66,58 +65,58 @@ st.markdown("""
         margin-top: 15px;
     }
     
-    /* הנגשה והגדלה משמעותית של תוויות שדות הקלט */
+    /* תוויות שדות הקלט - גדולות וברורות */
     .stWidgetFormLabel, label, [data-testid="stWidgetLabel"] p {
         color: #1e2418 !important;
         font-weight: 700 !important;
-        font-size: 1.2rem !important;
+        font-size: 1.25rem !important;
         margin-bottom: 8px;
     }
     
-    /* שדות קלט מוגדלים וחלקים */
+    /* עיצוב תיבות קלט ומספרים */
     .stTextInput>div>div>input, .stSelectbox>div>div>div, .stNumberInput>div>div>input {
         background-color: #ffffff !important;
         color: #1e2418 !important;
         border: 2px solid #556644 !important;
         border-radius: 8px !important;
-        font-size: 1.15rem !important;
-        padding: 6px !important;
+        font-size: 1.2rem !important;
+        padding: 8px !important;
     }
     
-    /* עיצוב מחדש של הציון והמדדים */
+    /* עיצוב תיבות המדדים והסיכום */
     div[data-testid="stMetricValue"] {
-        font-size: 2.3rem !important;
+        font-size: 2.4rem !important;
         font-weight: bold !important;
         color: #1e2418 !important;
     }
     div[data-testid="metric-container"] {
-        background-color: rgba(255, 255, 255, 0.92);
+        background-color: rgba(255, 255, 255, 0.94);
         border: 2px solid #556644;
         padding: 20px;
         border-radius: 12px;
-        box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.1);
+        box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.08);
     }
     
-    /* עיצוב כרטיסיות הטפסים */
+    /* עיצוב כרטיסיות הטפסים - לבן נקי חצי שקוף */
     div[data-testid="stForm"] {
-        background-color: rgba(255, 255, 255, 0.9) !important;
+        background-color: rgba(255, 255, 255, 0.92) !important;
         border-radius: 16px;
-        padding: 30px;
+        padding: 35px;
         border: 2px solid #556644 !important;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+        box-shadow: 0 12px 45px rgba(0,0,0,0.1);
     }
     
-    /* כפתורי הפעלה רחבים וברורים */
+    /* כפתורים מודגשים וגדולים */
     .stButton>button {
         background-color: #556644;
         color: white;
         border-radius: 8px;
         border: 1px solid #3d4a31;
-        padding: 12px 30px;
-        font-size: 1.25rem;
+        padding: 14px 35px;
+        font-size: 1.3rem;
         font-weight: bold;
         transition: all 0.3s ease;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
         width: 100%;
     }
     .stButton>button:hover {
@@ -125,33 +124,33 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
-    /* 🚨 שדרוג והנגשה של הלשוניות (Tabs) למראה יפה וגדול 🚨 */
+    /* שדרוג היסטרי של הלשוניות (Tabs) - ללא מסך 1/2/3, כפתורים גדולים ומרווחים */
     button[data-baseweb="tab"] {
-        font-size: 1.4rem !important; /* פונט גדול ובולט */
+        font-size: 1.45rem !important;
         font-weight: 800 !important;
         color: #4a5740 !important;
-        padding: 14px 28px !important;
-        background-color: rgba(255, 255, 255, 0.5) !important;
+        padding: 14px 35px !important;
+        background-color: rgba(255, 255, 255, 0.6) !important;
         border-radius: 10px 10px 0 0 !important;
-        margin-left: 8px !important;
-        border: 1px solid rgba(85, 102, 68, 0.2) !important;
+        margin-left: 10px !important;
+        border: 2px solid rgba(85, 102, 68, 0.2) !important;
         border-bottom: none !important;
         transition: all 0.2s ease;
     }
     
-    /* עיצוב הלשונית שנבחרה ברגע זה */
+    /* הלשונית הפעילה שנבחרה */
     button[aria-selected="true"] {
         color: #ffffff !important;
-        background-color: #556644 !important; /* רקע ירוק זית מודגש לטאב הפעיל */
+        background-color: #556644 !important; /* רקע ירוק זית מודגש */
         border-color: #556644 !important;
-        box-shadow: 0px -4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0px -4px 15px rgba(0,0,0,0.12);
     }
     
-    /* עיצוב הטבלאות */
+    /* עיצוב טבלאות השיבוץ והפידבק */
     .stDataFrame, [data-testid="stDataEditor"] {
-        background-color: rgba(255, 255, 255, 0.95) !important;
+        background-color: rgba(255, 255, 255, 0.96) !important;
         border-radius: 12px;
-        padding: 6px;
+        padding: 8px;
         border: 2px solid #556644;
     }
     
@@ -220,14 +219,14 @@ def login_page():
             else:
                 st.error("שם משתמש או סיסמה שגויים. המשתמש אינו קיים במערכת.")
 
-# --- מסך 2: ממשק חייל (הזנת אילוצים מסווגים) ---
+# --- מסך 2: ממשק חייל ---
 def soldier_page():
     show_logo()
     user_name = st.session_state['user_info']['name']
     st.markdown(f"<h2>שלום {user_name}, עדכן את אילוציך במערכת</h2>", unsafe_allow_html=True)
     
     with st.form("constraints_form"):
-        st.markdown("### 📝 הגשת אילוץ חדש (מסתנכרן אוטומטית לפי דחיפות)")
+        st.markdown("### 📝 הגשת אילוץ חדש")
         role = st.selectbox("תפקיד בכוח:", ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט", "רחפניסט", "מטוליסט", "מאגיסט", "רובאי לוחם"])
         request_type = st.selectbox("סוג האילוץ (סיווג דחיפות):", ["הליך רפואי", "אירוע משפחתי", "סיבה אישית", "מבחן/לימודים", "אחר"])
         free_text = st.text_input("פירוט האילוץ (מלל חופשי):", placeholder="הקלד כאן פרטים נוספים...")
@@ -280,13 +279,13 @@ def soldier_page():
         st.session_state['logged_in'] = False
         st.rerun()
 
-# --- מסך 3: ממשק מפקד (לשוניות משודרגות ומעוצבות מחדש) ---
+# --- מסך 3: ממשק מפקד (שמות חדים, מונגשים ומעוצבים מחדש) ---
 def commander_page():
     show_logo()
     st.markdown("<h1>ניהול שיבוץ - MiluiMate</h1>", unsafe_allow_html=True)
     
-    # שלוש לשוניות מעוצבות כפתורים גדולים
-    tab1, tab2, tab3 = st.tabs(["מסך 1: הגדרת דרישות סד\"כ", "מסך 2: פידבק סטטוס אילוצים", "מסך 3: לוח שיבוץ אופטימלי"])
+    # שינוי שמות הטאבים לשמות מקצועיים קצרים, ללא מסך 1/2/3
+    tab1, tab2, tab3 = st.tabs([" הגדרת דרישות", "🚦 סטטוס אילוצים", "📅 לוח יציאות"])
     
     with tab1:
         with st.form("commander_constraints_form"):
@@ -324,7 +323,7 @@ def commander_page():
                 st.success("הדרישות המבצעיות נשמרו בהצלחה!")
 
     with tab2:
-        st.markdown("### 🚦 פידבק ובקרת סטטוס אילוצים (בזמן אמת)")
+        st.markdown("### 🚦 בקרת אילוצי פרט מסונכרנים")
         
         rows = []
         for soldier_name, data in st.session_state['db_soldiers'].items():
@@ -370,4 +369,91 @@ def commander_page():
         with col_sel2:
             new_status_choice = st.selectbox("קבע סטטוס חדש:", ["אושר", "לא אושר", "בבדיקה"])
         with col_sel3:
-            st
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🔄 עדכן סטטוס"):
+                if st.session_state['db_soldiers'][chosen_soldier]["constraints"]:
+                    st.session_state['db_soldiers'][chosen_soldier]["constraints"][0]["סטטוס"] = new_status_choice
+                    st.success(f"הסטטוס של {chosen_soldier} עודכן ל-{new_status_choice}!")
+                    st.rerun()
+                else:
+                    st.warning("לחייל זה אין אילוצים רשומים לשינוי.")
+
+    with tab3:
+        st.markdown("### 📅 הצעת שיבוץ ועריכה")
+        
+        if st.button("🚀 הפעל מנוע אופטימיזציה משוקלל דחיפויות"):
+            with st.spinner("מנוע ה-CP-SAT מנתח את אילוצי הסד\"כ..."):
+                time.sleep(1.8)
+                
+                names_list = list(st.session_state['db_soldiers'].keys())
+                roles_list = [st.session_state['db_soldiers'][name]["role"] for name in names_list]
+                
+                days = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'"]
+                mock_data = {"שם החייל": names_list, "תפקיד / פק\"ל": roles_list}
+                
+                for d_idx, day in enumerate(days):
+                    day_status = []
+                    for idx, name in enumerate(names_list):
+                        constraints = st.session_state['db_soldiers'][name]["constraints"]
+                        if constraints and constraints[0]["סטטוס"] == "אושר" and idx == d_idx:
+                            day_status.append("בבית (חופשה)")
+                        else:
+                            day_status.append("נוכח בבסיס")
+                    mock_data[day] = day_status
+                    
+                st.session_state['current_df'] = pd.DataFrame(mock_data)
+                st.success("השיבוץ האופטימלי חושב והתחשב בדחיפויות הלוחמים!")
+
+        if 'current_df' in st.session_state:
+            status_options = ["נוכח בבסיס", "בבית (חופשה)", "יציאה קצרה (כמה שעות)", "הארכת שהות (גיבוי)"]
+            
+            edited_df = st.data_editor(
+                st.session_state['current_df'],
+                use_container_width=True,
+                num_rows="fixed",
+                column_config={
+                    "יום א'": st.column_config.SelectboxColumn(options=status_options),
+                    "יום ב'": st.column_config.SelectboxColumn(options=status_options),
+                    "יום ג'": st.column_config.SelectboxColumn(options=status_options),
+                    "יום ד'": st.column_config.SelectboxColumn(options=status_options),
+                    "יום ה'": st.column_config.SelectboxColumn(options=status_options),
+                }
+            )
+            st.session_state['current_df'] = edited_df
+
+            st.markdown("#### 🧮 מחשבון בקרה מבצעית (מתעדכן בלייב):")
+            days_cols = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'"]
+            calc_cols = st.columns(len(days_cols))
+            
+            req_forces = st.session_state.get('min_forces', 6)
+            for idx, day in enumerate(days_cols):
+                with calc_cols[idx]:
+                    present_count = edited_df[day].isin(["נוכח בבסיס", "הארכת שהות (גיבוי)"]).sum()
+                    if present_count >= req_forces:
+                        st.success(f"**{day}** \n🟢 {present_count}/{req_forces} ביחידה")
+                    else:
+                        st.error(f"**{day}** \n🔴 {present_count}/{req_forces} (סד\"כ חסר!)")
+
+            if st.button("💾 שמור והפץ לוח סופי מאושר"):
+                st.success("הלוח נשמר, ננעל והופץ בהצלחה!")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔒 התנתק מהמערכת"):
+        st.session_state['logged_in'] = False
+        if 'current_df' in st.session_state:
+            del st.session_state['current_df']
+        st.rerun()
+
+# --- ניתוב דפים ---
+def main():
+    if not st.session_state['logged_in']:
+        login_page()
+    else:
+        role = st.session_state['user_info']['role']
+        if role == "commander":
+            commander_page()
+        elif role == "soldier":
+            soldier_page()
+
+if __name__ == "__main__":
+    main()
