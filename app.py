@@ -6,7 +6,7 @@ from ortools.sat.python import cp_model
 # --- הגדרות תצורה בסיסיות לעמוד ---
 st.set_page_config(page_title="מערכת שיבוץ מילואים - MiluiMate", layout="centered")
 
-# --- הזרקת CSS מותאם אישית לעיצוב צבאי ויישור לימין (RTL) ---
+# --- הזרקת CSS מותאם אישית לעיצוב צבאי, יישור לימין (RTL) ותיקון הניגודיות ---
 st.markdown("""
     <style>
     /* הפיכת כיוון הטקסט לימין-לשמאל */
@@ -19,14 +19,21 @@ st.markdown("""
     /* עיצוב רקע האפליקציה לצבע צבאי עדין */
     .stApp {
         background-color: #2b3323; /* ירוק זית כהה */
-        color: #e6e5df; /* אפור-בז' בהיר לטקסט */
+        color: #e6e5df; /* אפור-בז' בהיר לטקסט כללי */
     }
     
-    /* עיצוב כרטיסיות (Inputs) */
+    /* תיקון קריטי: צביעת כל תוויות התיאור של הקלטים בלבן כדי שיראו אותן בבירור */
+    .stWidgetFormLabel, label, [data-testid="stWidgetLabel"] p {
+        color: #ffffff !important;
+        font-weight: bold !important;
+        font-size: 1.05rem !important;
+    }
+    
+    /* עיצוב פנים תיבות הקלט (Inputs) */
     .stTextInput>div>div>input, .stSelectbox>div>div>div, .stNumberInput>div>div>input {
-        background-color: #434f36;
-        color: white;
-        border: 1px solid #5a6b47;
+        background-color: #434f36 !important;
+        color: white !important;
+        border: 1px solid #5a6b47 !important;
     }
     
     /* כפתורים */
@@ -54,13 +61,13 @@ st.markdown("""
 
 # --- פונקציות עזר ---
 def show_logo():
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        # הנחה שהתמונה קיימת בתיקייה בשם זה
+        # שימוש בשם הקובץ המדויק שהעלית לגיטאהב
         try:
-            st.image("image_7de98a.png", use_container_width=True)
+            st.image("צילום מסך 2026-05-26 151245.png", use_container_width=True)
         except:
-            st.warning("לוגו MiluiMate לא נמצא. נא לוודא קיום קובץ image_7de98a.png בתיקייה.")
+            st.warning("לוגו MiluiMate לא נמצא בתיקייה. נא לוודא ששם הקובץ בגיטאהב תואם בדיוק.")
 
 def authenticate(username, password):
     # מסד נתונים וירטואלי (Mock) לצורך הדגמה - יוחלף ב-SQL בהמשך
@@ -83,7 +90,7 @@ if 'soldier_requests' not in st.session_state:
 # --- מסך 1: התחברות ---
 def login_page():
     show_logo()
-    st.markdown("<h2 style='text-align: center;'>MiluiMate - כניסה למערכת</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: white;'>MiluiMate - כניסה למערכת</h2>", unsafe_allow_html=True)
     
     with st.form("login_form"):
         username = st.text_input("שם משתמש:")
@@ -103,7 +110,7 @@ def login_page():
 def soldier_page():
     show_logo()
     user_name = st.session_state['user_info']['name']
-    st.markdown(f"<h2 style='text-align: center;'>ברוך הבא, {user_name}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; color: white;'>ברוך הבא, {user_name}</h2>", unsafe_allow_html=True)
     st.markdown("### הזנת אילוצים ובקשות יציאה")
     
     with st.form("constraints_form"):
@@ -125,37 +132,35 @@ def soldier_page():
 # --- מסך 3: ממשק מפקד (אופטימיזציה ב-OR-Tools) ---
 def commander_page():
     show_logo()
-    st.markdown("<h2 style='text-align: center;'>מסוף פיקוד - הרצת אופטימיזציה (MiluiMate Engine)</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: white;'>מסוף פיקוד - הרצת אופטימיזציה (MiluiMate Engine)</h2>", unsafe_allow_html=True)
     
     st.markdown("### הגדרת אילוצים מבצעיים (קשיחים)")
-    col1, col2 = st.columns(2)
-    with col1:
-        min_forces = st.number_input("סד\"כ מינימלי נדרש בבסיס (ליום):", min_value=1, value=15)
-        min_medics = st.number_input("מספר חובשים מינימלי בבסיס:", min_value=1, value=2)
-    with col2:
-        exit_format = st.selectbox("דרישת/תבנית יציאות כללית:", ["ללא מוגדר (חישוב חופשי)", "חמשוש", "אפטר שבועי", "שבוע-שבוע"])
-        planning_days = st.number_input("טווח תכנון (ימים):", min_value=7, value=14)
+    with st.form("commander_constraints_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            min_forces = st.number_input("סד\"כ מינימלי נדרש בבסיס (ליום):", min_value=1, value=15)
+            min_medics = st.number_input("מספר חובשים מינימלי בבסיס:", min_value=1, value=2)
+        with col2:
+            exit_format = st.selectbox("דרישת/תבנית יציאות כללית:", ["ללא מוגדר (חישוב חופשי)", "חמשוש", "אפטר שבועי", "שבוע-שבוע"])
+            planning_days = st.number_input("טווח תכנון (ימים):", min_value=7, value=14)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        run_optimization = st.form_submit_button("🚀 הפעל מנוע אופטימיזציה (CP-SAT)")
 
-    st.markdown("---")
-    
-    if st.button("🚀 הפעל מנוע אופטימיזציה (CP-SAT)"):
+    if run_optimization:
         with st.spinner("בונה מודל ומשקלל אילוצים..."):
-            # כאן יכנס מנוע ה-CP-SAT האמיתי.
             model = cp_model.CpModel()
-            
-            # הדמיית זמן פתרון של בעיה קומבינטורית
-            time.sleep(2) 
+            time.sleep(2) # הדמיית ריצה קומבינטורית
             
             st.success("האופטימיזציה הסתיימה בהצלחה. נמצא פתרון אופטימלי גלובלי!")
             
-            # מדדי הצלחה (בהתאם לנדרש בפרויקט חקר ביצועים)
+            # מדדי הצלחה מהאפיון
             m_col1, m_col2, m_col3 = st.columns(3)
             m_col1.metric("סטיית תקן (מדד שוויון)", "0.8 ימים", "-0.2")
             m_col2.metric("אחוז בקשות שאושרו", "94%", "+4%")
             m_col3.metric("זמן ריצה", "0.42 שניות")
             
             st.markdown("### 📅 שיבוץ אופטימלי שנוצר (טיוטה ראשונית)")
-            # יצירת טבלת דמה (Mock DataFrame) של התוצאות
             mock_data = {
                 "שם החייל": ["רועי", "דניאל", "יוסי", "אביב"],
                 "תפקיד": ["חובש", "לוחם", "מפקד כיתה", "קלע"],
