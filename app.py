@@ -10,13 +10,16 @@ st.set_page_config(page_title="MiluiMate - ניהול שיבוץ מילואים"
 
 # --- פונקציה להמרת תמונת הרקע המקומית ל-Base64 ---
 def get_base64_of_bin_file(bin_file):
-    with open(bin_file, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
+    try:
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return None
 
 # ניסיון טעינת רקע ההסוואה שהעלית
-try:
-    bin_str = get_base64_of_bin_file('IMG_5952.JPG')
+bin_str = get_base64_of_bin_file('IMG_5952.JPG')
+if bin_str:
     background_css = f"""
     <style>
     .stApp {{
@@ -29,8 +32,7 @@ try:
     </style>
     """
     st.markdown(background_css, unsafe_allow_html=True)
-except:
-    # גיבוי במידה והקובץ לא נמצא זמנית בשרת
+else:
     st.markdown("""
         <style>
         .stApp { background-color: #e6e5df; }
@@ -129,18 +131,22 @@ st.markdown("""
 def show_logo():
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        # מנגנון חכם שמוודא מציאת הלוגו גם אם יש הבדל בסיומת או באותיות גדולות/קטנות
-        possible_names = ["logo.jpeg", "logo.jpg", "logo.png", "LOGO.jpeg", "LOGO.JPG", "LOGO.PNG", "Logo.jpeg"]
+        # מנגנון חסין שגיאות שמחפש את כל הווריאציות של השם logo
+        possible_names = ["logo.jpeg", "logo.jpg", "logo.png", "LOGO.jpeg", "LOGO.JPG", "LOGO.PNG", "Logo.jpeg", "Logo.jpg"]
         logo_found = False
         
         for name in possible_names:
             if os.path.exists(name):
-                st.image(name, use_container_width=True)
-                logo_found = True
-                break
+                try:
+                    st.image(name, use_container_width=True)
+                    logo_found = True
+                    break
+                except:
+                    pass
                 
         if not logo_found:
-            st.warning("לוגו המערכת לא נמצא בתיקיית הריצה הראשי.")
+            # אם הוא לא מוצא, האתר לא יקרוס אלא פשוט יציג כותרת מעוצבת זמנית
+            st.markdown("<h1 style='text-align: center; color: #556644;'>🐌 MiluiMate</h1>", unsafe_allow_html=True)
 
 def authenticate(username, password):
     users = {
@@ -179,4 +185,42 @@ def login_page():
 # --- מסך 2: ממשק חייל ---
 def soldier_page():
     show_logo()
-    user_name = st.session_state
+    user_name = st.session_state['user_info']['name']
+    st.markdown(f"<h2 style='text-align: center;'>שלום {user_name}, שלח את העדפותיך במערכת MiluiMate</h2>", unsafe_allow_html=True)
+    
+    with st.form("constraints_form"):
+        role = st.selectbox("תפקיד בכוח:", ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט"])
+        request_type = st.selectbox("סוג/תבנית יציאה מבוקשת:", ["יומי", "שבוע-שבוע", "חמשו\"ש", "יומיים"])
+        dates = st.date_input("תאריכים מבוקשים ליציאה:")
+        submit_req = st.form_submit_button("שלח בקשה למפקד")
+        
+        if submit_req:
+            st.success("בקשתך נקלטה במערכת בהצלחה ותלקח בחשבון בריצה הבאה!")
+            
+    if st.button("התנתק"):
+        st.session_state['logged_in'] = False
+        st.rerun()
+
+# --- מסך 3: ממשק מפקד ---
+def commander_page():
+    show_logo()
+    st.markdown("<h2 style='text-align: center;'>שלום מפקד יקר, ברוך הבא ל-MiluiMate</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #3d4a31; font-weight: bold;'>כאן תוכל להגדיר את דרישות הסד\"כ המבצעיות ולהפיק לוח יציאות אופטימלי</p>", unsafe_allow_html=True)
+    
+    with st.form("commander_constraints_form"):
+        st.markdown("### 🛠️ הגדרת אילוצי סד\"כ כלליים")
+        col1, col2 = st.columns(2)
+        with col1:
+            min_forces = st.number_input("סד\"כ לוחמים מינימלי חובה בבסיס (בכל יום):", min_value=1, value=15)
+            planning_days = st.number_input("טווח תכנון הסבב (בימים):", min_value=7, value=14)
+        with col2:
+            exit_format = st.selectbox("תבנית יציאות מועדפת לכוח:", ["יומי", "שבוע-שבוע", "חמשו\"ש", "יומיים"])
+        
+        st.markdown("---")
+        st.markdown("### 🗂️ דרישת בעלי תפקידים חיוניים (נוכחות חובה בכל יום)")
+        
+        col_role1, col_role2, col_role3, col_role4, col_role5 = st.columns(5)
+        with col_role1:
+            min_commanders = st.number_input("מפקדי כיתות:", min_value=0, value=3)
+        with col_role2:
+            min_medics = st
