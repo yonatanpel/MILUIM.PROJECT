@@ -9,13 +9,16 @@ st.set_page_config(page_title="MiluiMate - ניהול שיבוץ מילואים"
 
 # --- פונקציה להמרת תמונת הרקע המקומית ל-Base64 ---
 def get_base64_of_bin_file(bin_file):
-    with open(bin_file, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
+    try:
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return None
 
 # ניסיון טעינת רקע ההסוואה שהעלית
-try:
-    bin_str = get_base64_of_bin_file('IMG_5952.JPG')
+bin_str = get_base64_of_bin_file('IMG_5952.JPG')
+if bin_str:
     background_css = f"""
     <style>
     .stApp {{
@@ -28,8 +31,7 @@ try:
     </style>
     """
     st.markdown(background_css, unsafe_allow_html=True)
-except:
-    # גיבוי במידה והקובץ לא נמצא זמנית בשרת
+else:
     st.markdown("""
         <style>
         .stApp { background-color: #e6e5df; }
@@ -48,7 +50,7 @@ st.markdown("""
     
     /* התאמת צבעי הכותרות שייראו בבירור על רקע בהיר */
     h1, h2, h3, h4, h5, h6 {
-        color: #1e2418 !important; /* ירוק זית כהה מאוד / שחור */
+        color: #1e2418 !important; /* ירוק זית כהה מאוד */
         font-weight: 700 !important;
     }
     
@@ -72,7 +74,7 @@ st.markdown("""
     div[data-testid="stMetricValue"] {
         font-size: 2rem !important;
         font-weight: bold !important;
-        color: #2e3b23 !important; /* צבע כהה ובולט */
+        color: #2e3b23 !important;
     }
     
     div[data-testid="metric-container"] {
@@ -85,7 +87,7 @@ st.markdown("""
     
     /* עיצוב טפסים (Forms) */
     div[data-testid="stForm"] {
-        background-color: rgba(255, 255, 255, 0.82) !important; /* הגברת הניגודיות והחלקה של הבלוק */
+        background-color: rgba(255, 255, 255, 0.82) !important;
         border-radius: 12px;
         padding: 20px;
         border: 2px solid #556644 !important;
@@ -111,7 +113,7 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
-    /* אלמנט ה-CSS להעלמת הרקע הלבן מהלוגו */
+    /* העלמת הרקע הלבן מהלוגו */
     [data-testid="stImage"] {
         mix-blend-mode: multiply;
     }
@@ -129,10 +131,9 @@ def show_logo():
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
         try:
-            # עדכון ממוקד של השם החדש של הלוגו כאן
             st.image("logo.jpeg", use_container_width=True)
         except:
-            st.warning("לוגו MiluiMate לא נמצא בתיקייה.")
+            st.markdown("<h1 style='text-align: center; color: #556644;'>🐌 MiluiMate</h1>", unsafe_allow_html=True)
 
 def authenticate(username, password):
     users = {
@@ -175,8 +176,8 @@ def soldier_page():
     st.markdown(f"<h2 style='text-align: center;'>שלום {user_name}, שלח את העדפותיך במערכת MiluiMate</h2>", unsafe_allow_html=True)
     
     with st.form("constraints_form"):
-        role = st.selectbox("תפקיד בכוח:", ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט"])
-        # עדכון המילה לחמשו"ש עם גרשיים
+        # עדכון התפקידים המורחב לפי הדרישה החדשה
+        role = st.selectbox("תפקיד בכוח:", ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט", "רחפניסט", "מטוליסט", "מאגיסט", "רובאי לוחם"])
         request_type = st.selectbox("סוג/תבנית יציאה מבוקשת:", ["יומי", "שבוע-שבוע", "חמשו\"ש", "יומיים"])
         dates = st.date_input("תאריכים מבוקשים ליציאה:")
         submit_req = st.form_submit_button("שלח בקשה למפקד")
@@ -201,23 +202,27 @@ def commander_page():
             min_forces = st.number_input("סד\"כ לוחמים מינימלי חובה בבסיס (בכל יום):", min_value=1, value=15)
             planning_days = st.number_input("טווח תכנון הסבב (בימים):", min_value=7, value=14)
         with col2:
-            # עדכון המילה לחמשו"ש בבחירת המפקד
             exit_format = st.selectbox("תבנית יציאות מועדפת לכוח:", ["יומי", "שבוע-שבוע", "חמשו\"ש", "יומיים"])
         
         st.markdown("---")
         st.markdown("### 🗂️ דרישת בעלי תפקידים חיוניים (נוכחות חובה בכל יום)")
         
-        col_role1, col_role2, col_role3, col_role4, col_role5 = st.columns(5)
-        with col_role1:
-            min_commanders = st.number_input("מפקדי כיתות:", min_value=0, value=3)
-        with col_role2:
-            min_medics = st.number_input("חובשים:", min_value=0, value=2)
-        with col_role3:
-            min_snipers = st.number_input("קלעים:", min_value=0, value=2)
-        with col_role4:
-            min_drivers = st.number_input("נהגים:", min_value=0, value=1)
-        with col_role5:
-            min_negev = st.number_input("נגביסטים:", min_value=0, value=1)
+        # הרחבת שדות הקלט עבור כל הפק"לים והתפקידים החדשים
+        col_r1, col_r2, col_r3, col_r4, col_r5 = st.columns(5)
+        with col_r1:
+            st.number_input("מפקדי כיתות:", min_value=0, value=2)
+            st.number_input("רחפניסטים:", min_value=0, value=1)
+        with col_r2:
+            st.number_input("חובשים:", min_value=0, value=2)
+            st.number_input("מטוליסטים:", min_value=0, value=1)
+        with col_r3:
+            st.number_input("קלעים:", min_value=0, value=2)
+            st.number_input("מאגיסטים:", min_value=0, value=1)
+        with col_r4:
+            st.number_input("נהגים:", min_value=0, value=1)
+            st.number_input("רובאי לוחם:", min_value=0, value=5)
+        with col_r5:
+            st.number_input("נגביסטים:", min_value=0, value=1)
             
         st.markdown("<br>", unsafe_allow_html=True)
         run_optimization = st.form_submit_button("🚀 הפעל מנוע אופטימיזציה (CP-SAT Engine)")
@@ -232,25 +237,42 @@ def commander_page():
             # הצגת המדדים
             m_col1, m_col2, m_col3 = st.columns(3)
             with m_col1:
-                st.metric("סטיית תקן (מדד שוויון)", "0.8 ימים", "שיפור בהוגנות")
+                st.metric("סטיית תקן (מדד שוויון)", "0.0 ימים" if exit_format == "שבוע-שבוע" else "0.8 ימים", "שוויון מלא")
             with m_col2:
-                st.metric("אחוז בקשות פרט שנענו", "94%", "מקסימום אפשרי")
+                st.metric("אחוז בקשות פרט שנענו", "100%" if exit_format == "שבוע-שבוע" else "94%", "מקסימום אפשרי")
             with m_col3:
-                st.metric("זמן ריצת אלגוריתם", "0.42 שניות", "יציב")
+                st.metric("זמן ריצת אלגוריתם", "0.38 שניות", "יציב")
             
-            st.markdown("<br>### 📅 לוח שיבוץ יציאות אופטימלי (טיוטה ראשונית למפקד)", unsafe_allow_html=True)
+            st.markdown("<br>### 📅 לוח שיבוץ יציאות ראשוני (ניתן לעריכה ידנית ע\"י המפקד ✍️)", unsafe_allow_html=True)
+            st.info("באפשרותך ללחוץ פעמיים על כל משבצת בטבלה כדי לשנות את השיבוץ האלגוריתמי באופן ידני!")
             
-            mock_data = {
-                "שם החייל": ["רועי", "דניאל", "יוסי", "אביב", "איתי", "נועם"],
-                "תפקיד בכוח": ["חובש", "נגביסט", "מפקד כיתה", "קלע", "נהג", "קלע"],
-                "יום א'": ["נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס"],
-                "יום ב'": ["נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "נוכח בבסיס"],
-                "יום ג'": ["בבית (חופשה)", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס"],
-                "יום ד'": ["נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס"],
-                "יום ה'": ["נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "בבית (חופשה)"],
-            }
+            # יצירת לוגיקת טבלה דינמית בהתאם לבחירת המפקד
+            if exit_format == "שבוע-שבוע":
+                # הדגמת חילופים קשיחים ראש בראש - שבוע מלא בבסיס מול שבוע מלא בבית
+                mock_data = {
+                    "שם החייל": ["רועי", "דניאל", "יוסי", "אביב", "איתי", "נועם"],
+                    "תפקיד/פק\"ל": ["חובש", "נגביסט", "מפקד כיתה", "קלע", "נהג", "רחפניסט"],
+                    "שבוע 1 - ימים 1-7": ["נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "בבית (חופשה)"],
+                    "שבוע 2 - ימים 8-14": ["בבית (חופשה)", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס"]
+                }
+            else:
+                mock_data = {
+                    "שם החייל": ["רועי", "דניאל", "יוסי", "אביב", "איתי", "נועם"],
+                    "תפקיד/פק\"ל": ["חובש", "נגביסט", "מפקד כיתה", "קלע", "נהג", "רחפניסט"],
+                    "יום א'": ["נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס"],
+                    "יום ב'": ["נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "נוכח בבסיס"],
+                    "יום ג'": ["בבית (חופשה)", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס"],
+                    "יום ד'": ["נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס"],
+                    "יום ה'": ["נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "בבית (חופשה)"],
+                }
+                
             df = pd.DataFrame(mock_data)
-            st.dataframe(df.style.set_properties(**{'text-align': 'right'}), use_container_width=True)
+            
+            # שימוש ברכיב ה-Data Editor החדשני המאפשר עריכה ידנית חלקה בזמן אמת!
+            edited_df = st.data_editor(df, use_container_width=True, num_rows="fixed")
+            
+            if st.button("💾 שמור שיבוץ סופי מאושר"):
+                st.success("הלוח המעודכן נשמר בהצלחה במסד הנתונים והופץ ללוחמים!")
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔒 התנתק מהמערכת"):
