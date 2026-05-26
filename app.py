@@ -1,12 +1,42 @@
 import streamlit as st
 import pandas as pd
 import time
+import base64
 from ortools.sat.python import cp_model
 
 # --- הגדרות תצורה בסיסיות לעמוד ---
 st.set_page_config(page_title="MiluiMate - ניהול שיבוץ מילואים", layout="centered")
 
-# --- הזרקת CSS מתקדם לעיצוב צבאי מודרני, נקי וקריא ---
+# --- פונקציה להמרת תמונת הרקע המקומית ל-Base64 ---
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+# ניסיון טעינת רקע ההסוואה שהעלית
+try:
+    bin_str = get_base64_of_bin_file('IMG_5952.JPG')
+    background_css = f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/jpg;base64,{bin_str}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }}
+    </style>
+    """
+    st.markdown(background_css, unsafe_allow_html=True)
+except:
+    # גיבוי במידה והקובץ לא נמצא זמנית בשרת
+    st.markdown("""
+        <style>
+        .stApp { background-color: #e6e5df; }
+        </style>
+    """, unsafe_allow_html=True)
+
+# --- הזרקת CSS מותאם אישית לעיצוב הניגודיות מעל רקע ההסוואה הבהיר ---
 st.markdown("""
     <style>
     /* הפיכת כיוון הטקסט לימין-לשמאל */
@@ -16,47 +46,49 @@ st.markdown("""
         font-family: 'Assistant', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    /* רקע האפליקציה - ירוק זית עמוק ויוקרתי */
-    .stApp {
-        background-color: #1e2418; 
-        color: #f1f0ea; 
+    /* התאמת צבעי הכותרות שייראו בבירור על רקע בהיר */
+    h1, h2, h3, h4, h5, h6 {
+        color: #1e2418 !important; /* ירוק זית כהה מאוד / שחור */
+        font-weight: 700 !important;
     }
     
-    /* עיצוב כותרות */
-    h1, h2, h3 {
-        color: #ffffff !important;
-        font-weight: 700 !important;
+    /* תוויות התיאור של שדות הקלט */
+    .stWidgetFormLabel, label, [data-testid="stWidgetLabel"] p {
+        color: #1e2418 !important;
+        font-weight: 600 !important;
+        font-size: 1.05rem !important;
+        margin-bottom: 5px;
+    }
+    
+    /* עיצוב שדות הקלט - קונטרסט כהה בתוך התיבות */
+    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stNumberInput>div>div>input {
+        background-color: #ffffff !important;
+        color: #1e2418 !important;
+        border: 2px solid #556644 !important;
+        border-radius: 6px !important;
     }
     
     /* עיצוב כרטיסיות המדדים (Metrics Blocks) */
     div[data-testid="stMetricValue"] {
         font-size: 2rem !important;
         font-weight: bold !important;
-        color: #a3b899 !important; /* ירוק בהיר זוהר */
+        color: #2e3b23 !important; /* צבע כהה ובולט */
     }
     
     div[data-testid="metric-container"] {
-        background-color: #2a3322;
-        border: 1px solid #47543a;
+        background-color: rgba(255, 255, 255, 0.85); /* רקע לבן חצי שקוף */
+        border: 2px solid #556644;
         padding: 15px;
         border-radius: 10px;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
     }
     
-    /* תוויות התיאור של כל תיבות הקלט */
-    .stWidgetFormLabel, label, [data-testid="stWidgetLabel"] p {
-        color: #f1f0ea !important;
-        font-weight: 600 !important;
-        font-size: 1.05rem !important;
-        margin-bottom: 5px;
-    }
-    
-    /* עיצוב שדות הקלט */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stNumberInput>div>div>input {
-        background-color: #2d3824 !important;
-        color: white !important;
-        border: 1px solid #4e5e40 !important;
-        border-radius: 6px !important;
+    /* עיצוב טפסים (Forms) */
+    div[data-testid="stForm"] {
+        background-color: rgba(255, 255, 255, 0.75); /* שקיפות עדינה לטופס */
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #bcbcbc;
     }
     
     /* עיצוב כפתורים */
@@ -64,7 +96,7 @@ st.markdown("""
         background-color: #556644;
         color: white;
         border-radius: 8px;
-        border: 1px solid #6e825c;
+        border: 1px solid #3d4a31;
         padding: 10px 20px;
         font-size: 1.1rem;
         font-weight: bold;
@@ -73,13 +105,12 @@ st.markdown("""
     }
     
     .stButton>button:hover {
-        background-color: #6e825c;
-        border-color: #8da379;
+        background-color: #3d4a31;
         color: #ffffff;
         transform: translateY(-2px);
     }
     
-    /* התראות הצלחה ושגיאה */
+    /* התראות */
     .stAlert {
         border-radius: 8px;
         direction: rtl;
@@ -149,11 +180,11 @@ def soldier_page():
         st.session_state['logged_in'] = False
         st.rerun()
 
-# --- מסך 3: ממשק מפקד (אופטימיזציה משודרגת) ---
+# --- מסך 3: ממשק מפקד ---
 def commander_page():
     show_logo()
     st.markdown("<h2 style='text-align: center;'>שלום מפקד יקר, ברוך הבא ל-MiluiMate</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #b6c2b0;'>כאן תוכל להגדיר את דרישות הסד\"כ המבצעיות ולהפיק לוח יציאות אופטימלי</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #3d4a31; font-weight: bold;'>כאן תוכל להגדיר את דרישות הסד\"כ המבצעיות ולהפיק לוח יציאות אופטימלי</p>", unsafe_allow_html=True)
     
     with st.form("commander_constraints_form"):
         st.markdown("### 🛠️ הגדרת אילוצי סד\"כ כלליים")
@@ -183,11 +214,11 @@ def commander_page():
     if run_optimization:
         with st.spinner("מנוע ה-CP-SAT מנתח מיליוני שילובים אפשריים..."):
             model = cp_model.CpModel()
-            time.sleep(2.5) # הדמיית ריצת חישוב קומבינטורי רציני
+            time.sleep(2.5) # הדמיית ריצה
             
             st.success("האופטימיזציה הסתיימה בהצלחה! נמצא פתרון אופטימלי המאזן בין המשימה לחיילים.")
             
-            # הצגת המדדים בכרטיסיות המעוצבות החדשות
+            # הצגת המדדים
             m_col1, m_col2, m_col3 = st.columns(3)
             with m_col1:
                 st.metric("סטיית תקן (מדד שוויון)", "0.8 ימים", "שיפור בהוגנות")
@@ -198,7 +229,6 @@ def commander_page():
             
             st.markdown("<br>### 📅 לוח שיבוץ יציאות אופטימלי (טיוטה ראשונית למפקד)", unsafe_allow_html=True)
             
-            # הדמיית טבלה רצינית ומפורטת
             mock_data = {
                 "שם החייל": ["רועי", "דניאל", "יוסי", "אביב", "איתי", "נועם"],
                 "תפקיד בכוח": ["חובש", "לוחם פלוגתי", "מפקד כיתה", "קלע", "נהג מבצעי", "צלף"],
