@@ -113,9 +113,20 @@ st.markdown("""
 def show_logo():
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        try:
-            st.image("logo.jpeg", use_container_width=True)
-        except:
+        # מנגנון חסין שגיאות שמחפש את הלוגו logo.jpeg
+        possible_names = ["logo.jpeg", "logo.jpg", "logo.png", "LOGO.jpeg", "LOGO.JPG", "LOGO.PNG", "Logo.jpeg", "Logo.jpg"]
+        logo_found = False
+        
+        for name in possible_names:
+            if os.path.exists(name):
+                try:
+                    st.image(name, use_container_width=True)
+                    logo_found = True
+                    break
+                except:
+                    pass
+                
+        if not logo_found:
             st.markdown("<h1 style='text-align: center; color: #556644;'>🐌 MiluiMate</h1>", unsafe_allow_html=True)
 
 def authenticate(username, password):
@@ -164,8 +175,8 @@ def soldier_page():
         st.markdown("### 📝 הגשת אילוץ חדש")
         role = st.selectbox("תפקיד בכוח:", ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט", "רחפניסט", "מטוליסט", "מאגיסט", "רובאי לוחם"])
         
-        # עדכון השם והאפשרויות החדשות בדיוק לפי הדרישה
-        request_type = st.selectbox("סוג האילוץ:", ["הליך רפואי", "אירוע משפחתי", "סיבה אישית", "מבחן/לימודים"])
+        # הוספת האפשרות "אחר" לבקשתך
+        request_type = st.selectbox("סוג האילוץ:", ["הליך רפואי", "אירוע משפחתי", "סיבה אישית", "מבחן/לימודים", "אחר"])
         free_text = st.text_input("פירוט האילוץ (מלל חופשי):", placeholder="הקלד כאן פרטים נוספים...")
         
         st.markdown("**בחר את טווח התאריכים המדויק לאילוץ זה:**")
@@ -181,17 +192,16 @@ def soldier_page():
             if start_date > end_date:
                 st.error("תאריך ההתחלה לא יכול להיות מאוחר מתאריך הסיום.")
             else:
-                # שמירת הנתונים כולל המלל החופשי שהוזן
                 new_constraint = {
                     "סוג האילוץ": request_type,
-                    "פירוט / מלל חופשי": free_text if free_text else "אין פירוט",
+                    "פירוט / מלל חופשי": free_text if free_text else ("נדרש פירוט" if request_type == "אחר" else "אין פירוט"),
                     "תאריך התחלה": start_date.strftime("%d/%m/%Y"),
                     "תאריך סיום": end_date.strftime("%d/%m/%Y")
                 }
                 st.session_state['soldier_constraints'].append(new_constraint)
                 st.success("האילוץ נוסף בהצלחה לרשימת הבקשות שלך!")
 
-    # הצגת רשימת האילוצים הנוכחית של החייל
+    # הצגת רשימת האילוצים המרוכזת של החייל
     if st.session_state['soldier_constraints']:
         st.markdown("### 📋 האילוצים שהזנת לתקופה הקרובה:")
         c_df = pd.DataFrame(st.session_state['soldier_constraints'])
@@ -250,7 +260,7 @@ def commander_page():
                 roles_dict = {
                     "מפקד כיתה": num_commanders, "חובש": num_medics, "קלע": num_sharpshooters,
                     "נהג": num_drivers, "נגביסט": num_negev, "רחפניסט": num_drones,
-                    "מטוליסט": num_grenadiers, "מאגיסט": num_mag, "רובאי לוחם": num_infantry
+                    "mטוליסט": num_grenadiers, "מאגיסט": num_mag, "רובאי לוחם": num_infantry
                 }
                 
                 names_list, roles_list = [], []
@@ -267,19 +277,31 @@ def commander_page():
                     st.error("אנא הגדר לפחות לוחם אחד לסימולציה.")
                     return
                 
-                days = ["יום א'", "יום b'", "יום ג'", "יום ד'", "יום ה'"]
                 mock_data = {"שם החייל": names_list, "תפקיד / פק\"ל": roles_list}
                 
-                for d_idx, day in enumerate(days):
-                    day_status = []
+                if exit_format == "שבוע-שבוע":
+                    week1_status, week2_status = [], []
                     for idx in range(total_generated):
-                        if idx % 4 == 0 and d_idx == 1:
-                            day_status.append("בבית (חופשה)")
-                        elif idx % 5 == 0 and d_idx == 3:
-                            day_status.append("יציאה קצרה (כמה שעות)")
+                        if idx % 2 == 0:
+                            week1_status.append("נוכח בבסיס")
+                            week2_status.append("בבית (חופשה)")
                         else:
-                            day_status.append("נוכח בבסיס")
-                    mock_data[day] = day_status
+                            week1_status.append("בבית (חופשה)")
+                            week2_status.append("נוכח בבסיס")
+                    mock_data["שבוע 1 (ימים 1-7)"] = week1_status
+                    mock_data["שבוע 2 (ימים 8-14)"] = week2_status
+                else:
+                    days = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'"]
+                    for d_idx, day in enumerate(days):
+                        day_status = []
+                        for idx in range(total_generated):
+                            if idx % 4 == 0 and d_idx == 1:
+                                day_status.append("בבית (חופשה)")
+                            elif idx % 5 == 0 and d_idx == 3:
+                                day_status.append("יציאה קצרה (כמה שעות)")
+                            else:
+                                day_status.append("נוכח בבסיס")
+                        mock_data[day] = day_status
                 
                 st.session_state['current_df'] = pd.DataFrame(mock_data)
 
@@ -290,22 +312,31 @@ def commander_page():
         
         status_options = ["נוכח בבסיס", "בבית (חופשה)", "יציאה קצרה (כמה שעות)", "הארכת שהות (גיבוי)"]
         
+        if exit_format == "שבוע-שבוע":
+            col_config_dict = {
+                "שבוע 1 (ימים 1-7)": st.column_config.SelectboxColumn(options=status_options),
+                "שבוע 2 (ימים 8-14)": st.column_config.SelectboxColumn(options=status_options)
+            }
+            days_cols = ["שבוע 1 (ימים 1-7)", "שבוע 2 (ימים 8-14)"]
+        else:
+            col_config_dict = {
+                "יום א'": st.column_config.SelectboxColumn(options=status_options),
+                "יום ב'": st.column_config.SelectboxColumn(options=status_options),
+                "יום ג'": st.column_config.SelectboxColumn(options=status_options),
+                "יום ד'": st.column_config.SelectboxColumn(options=status_options),
+                "יום ה'": st.column_config.SelectboxColumn(options=status_options)
+            }
+            days_cols = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'"]
+
         edited_df = st.data_editor(
             st.session_state['current_df'],
             use_container_width=True,
             num_rows="fixed",
-            column_config={
-                "יום א'": st.column_config.SelectboxColumn(options=status_options),
-                "יום b'": st.column_config.SelectboxColumn(options=status_options),
-                "יום ג'": st.column_config.SelectboxColumn(options=status_options),
-                "יום ד'": st.column_config.SelectboxColumn(options=status_options),
-                "יום ה'": st.column_config.SelectboxColumn(options=status_options),
-            }
+            column_config=col_config_dict
         )
         st.session_state['current_df'] = edited_df
 
         st.markdown("#### 🧮 מחשבון עמידה באילוצים קשים (מתעדכן לפי השינויים הידניים שלך):")
-        days_cols = ["יום א'", "יום b'", "יום ג'", "יום ד'", "יום ה'"]
         
         calc_cols = st.columns(len(days_cols))
         for idx, day in enumerate(days_cols):
