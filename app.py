@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from ortools.sat.python import cp_model
 
 # --- הגדרות תצורה בסיסיות לעמוד ---
-st.set_page_config(page_title="MiluiMate - ניהול שיבוץ מילואים", layout="centered")
+st.set_page_config(page_title="MiluiMate - ניהול פלוגתי ומחלקתי", layout="centered")
 
 # --- פונקציה להמרת תמונת הרקע המקומית ל-Base64 ---
 def get_base64_of_bin_file(bin_file):
@@ -40,76 +40,125 @@ else:
         </style>
     """, unsafe_allow_html=True)
 
-# --- הזרקת CSS מותאם אישית לעיצוב הניגודיות מעל רקע ההסוואה הבהיר ---
+# --- הזרקת CSS מותאם אישית ---
 st.markdown("""
     <style>
-    html, body, [class*="css"]  {
-        direction: rtl;
-        text-align: right;
+    html, body, [class*="css"], .stApp  {
+        direction: rtl !important;
+        text-align: right !important;
         font-family: 'Assistant', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    h1, h2, h3, h4, h5, h6 {
+    
+    .stWidgetFormLabel, label, [data-testid="stWidgetLabel"] p, .stMarkdown p {
+        text-align: right !important;
+        direction: rtl !important;
         color: #1e2418 !important;
         font-weight: 700 !important;
+        font-size: 1.25rem !important;
+        margin-bottom: 8px;
     }
     
-    /* יישור כותרות בתוך טפסים לאמצע */
+    h1 {
+        font-size: 3.2rem !important;
+        color: #1e2418 !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        margin-bottom: 30px;
+    }
+    
+    h2 {
+        font-size: 2.2rem !important;
+        color: #1e2418 !important;
+        font-weight: 700 !important;
+        margin-top: 15px;
+        text-align: right !important;
+    }
+    
     div[data-testid="stForm"] h3 {
         text-align: center !important;
     }
-
-    .stWidgetFormLabel, label, [data-testid="stWidgetLabel"] p {
-        color: #1e2418 !important;
-        font-weight: 600 !important;
-        font-size: 1.05rem !important;
-        margin-bottom: 5px;
-    }
-    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stNumberInput>div>div>input {
+    
+    .stTextInput>div>div>input, .stSelectbox>div>div>div, .stNumberInput>div>div>input, .stDateInput>div>div>input {
         background-color: #ffffff !important;
         color: #1e2418 !important;
         border: 2px solid #556644 !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
+        font-size: 1.2rem !important;
+        padding: 8px !important;
+        text-align: right !important;
+        direction: rtl !important;
     }
+    
     div[data-testid="stMetricValue"] {
-        font-size: 2rem !important;
+        font-size: 2.4rem !important;
         font-weight: bold !important;
-        color: #2e3b23 !important;
+        color: #1e2418 !important;
     }
     div[data-testid="metric-container"] {
-        background-color: rgba(255, 255, 255, 0.85);
+        background-color: rgba(255, 255, 255, 0.94);
         border: 2px solid #556644;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
-    }
-    div[data-testid="stForm"] {
-        background-color: rgba(255, 255, 255, 0.82) !important;
-        border-radius: 12px;
         padding: 20px;
-        border: 2px solid #556644 !important;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.08);
     }
+    
+    div[data-testid="stForm"] {
+        background-color: rgba(255, 255, 255, 0.92) !important;
+        border-radius: 16px;
+        padding: 35px;
+        border: 2px solid #556644 !important;
+        box-shadow: 0 12px 45px rgba(0,0,0,0.1);
+    }
+    
     .stButton>button {
         background-color: #556644;
         color: white;
         border-radius: 8px;
         border: 1px solid #3d4a31;
-        padding: 10px 20px;
-        font-size: 1.1rem;
+        padding: 14px 35px;
+        font-size: 1.3rem;
         font-weight: bold;
         transition: all 0.3s ease;
-        box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+        width: 100%;
     }
     .stButton>button:hover {
         background-color: #3d4a31;
-        color: #ffffff;
         transform: translateY(-2px);
     }
+    
+    button[data-baseweb="tab"] {
+        font-size: 1.45rem !important;
+        font-weight: 800 !important;
+        color: #4a5740 !important;
+        padding: 14px 35px !important;
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        border-radius: 10px 10px 0 0 !important;
+        margin-left: 10px !important;
+        border: 2px solid rgba(85, 102, 68, 0.2) !important;
+        border-bottom: none !important;
+        transition: all 0.2s ease;
+    }
+    
+    button[aria-selected="true"] {
+        color: #ffffff !important;
+        background-color: #556644 !important;
+        border-color: #556644 !important;
+        box-shadow: 0px -4px 15px rgba(0,0,0,0.12);
+    }
+    
+    .stDataFrame, [data-testid="stDataEditor"] {
+        background-color: rgba(255, 255, 255, 0.96) !important;
+        border-radius: 12px;
+        padding: 8px;
+        border: 2px solid #556644;
+    }
+    
     [data-testid="stImage"] {
         mix-blend-mode: multiply;
     }
     .stAlert {
-        border-radius: 8px;
+        border-radius: 10px;
         direction: rtl;
     }
     </style>
@@ -119,61 +168,158 @@ st.markdown("""
 def show_logo():
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        try:
-            st.image("logo.jpeg", use_container_width=True)
-        except:
-            st.markdown("<h1 style='text-align: center; color: #556644;'>🐌 MiluiMate</h1>", unsafe_allow_html=True)
+        possible_names = ["logo.jpeg", "logo.jpg", "logo.png", "LOGO.jpeg", "LOGO.JPG", "LOGO.PNG", "Logo.jpeg", "Logo.jpg"]
+        logo_found = False
+        for name in possible_names:
+            if os.path.exists(name):
+                try:
+                    st.image(name, use_container_width=True)
+                    logo_found = True
+                    break
+                except:
+                    pass
+        if not logo_found:
+            st.markdown("<h1>🐌 MiluiMate</h1>", unsafe_allow_html=True)
 
-def authenticate(username, password):
-    users = {
-        "mefaked": {"pass": "1234", "role": "commander", "name": "סרן דוד"},
-        "hayal1": {"pass": "0000", "role": "soldier", "name": "רועי"},
+# --- אתחול בסיס נתונים פלוגתי מורחב ---
+if 'db_soldiers' not in st.session_state:
+    db = {}
+    roles_pool = ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט", "רחפניסט", "מטוליסט", "מאגיסט", "רובאי לוחם"]
+    
+    soldier_idx = 1
+    for dept in [1, 2, 3]:
+        for i in range(1, 21):
+            s_name = f"לוחם {soldier_idx}"
+            s_role = roles_pool[(soldier_idx - 1) % len(roles_pool)]
+            
+            constraints = []
+            if soldier_idx == 3:
+                constraints.append({"סוג האילוץ": "הליך רפואי", "פירוט / מלל חופשי": "ביקור רופא מומחה", "טווח תאריכים": "27/05/2026 - 28/05/2026", "דחיפות": "דרגה א' - קריטי", "סטטוס": "אושר"})
+            elif soldier_idx == 24:
+                constraints.append({"סוג האילוץ": "מבחן/לימודים", "פירוט / מלל חופשי": "מבחן סמסטר", "טווח תאריכים": "26/05/2026 - 26/05/2026", "דחיפות": "דרגה א' - קריטי", "סטטוס": "אושר"})
+            else:
+                constraints.append({"סוג האילוץ": "אין לי העדפה", "פירוט / מלל חופשי": "זמין לסבב מחלקתי הוגן", "טווח תאריכים": "-", "דחיפות": "סבב רגיל", "סטטוס": "אושר"})
+                
+            db[s_name] = {
+                "role": s_role,
+                "department": dept,
+                "constraints": constraints
+            }
+            soldier_idx += 1
+            
+    st.session_state['db_soldiers'] = db
+
+# --- אתחול מסד משתמשים וסיסמאות דינמי (מערכת הרשמה) ---
+if 'users_db' not in st.session_state:
+    st.session_state['users_db'] = {
+        "mefaked": {"pass": "1234", "role": "commander", "name": "מפקד מחלקה"},
+        "hayal1": {"pass": "0000", "role": "soldier", "name": "לוחם 3"},
     }
-    if username in users and users[username]["pass"] == password:
-        return users[username]
-    return None
 
-# --- ניהול State ---
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'user_info' not in st.session_state:
     st.session_state['user_info'] = None
-if 'soldier_constraints' not in st.session_state:
-    st.session_state['soldier_constraints'] = []
+if 'dept_min_forces' not in st.session_state:
+    st.session_state['dept_min_forces'] = {1: 4, 2: 4, 3: 4}
+if 'dept_schedules' not in st.session_state:
+    st.session_state['dept_schedules'] = {}
+if 'dept_config' not in st.session_state:
+    st.session_state['dept_config'] = {
+        1: {"format": "חמשו\"ש", "start": datetime.now().date(), "end": (datetime.now() + timedelta(days=14)).date()},
+        2: {"format": "חמשו\"ש", "start": datetime.now().date(), "end": (datetime.now() + timedelta(days=14)).date()},
+        3: {"format": "חמשו\"ש", "start": datetime.now().date(), "end": (datetime.now() + timedelta(days=14)).date()},
+    }
 
-# --- מסך 1: התחברות ---
+def authenticate(username, password):
+    users = st.session_state['users_db']
+    if username in users and users[username]["pass"] == password:
+        return users[username]
+    return None
+
+# --- מסך 1: התחברות והרשמה דינמית ---
 def login_page():
     show_logo()
-    st.markdown("<h2 style='text-align: center;'>MiluiMate - כניסה למערכת</h2>", unsafe_allow_html=True)
+    st.markdown("<h1>MiluiMate - כניסה למערכת</h1>", unsafe_allow_html=True)
     
-    with st.form("login_form"):
-        username = st.text_input("שם משתמש:")
-        password = st.text_input("סיסמה:", type="password")
-        submit = st.form_submit_button("התחבר")
-        
-        if submit:
-            user = authenticate(username, password)
-            if user:
-                st.session_state['logged_in'] = True
-                st.session_state['user_info'] = user
-                st.rerun()
-            else:
-                st.error("שם משתמש או סיסמה שגויים. המשתמש אינו קיים במערכת.")
+    # הוספת לשוניות להפרדה בין התחברות להרשמת חיילים חדשים
+    tab_login, tab_signup = st.tabs(["🔑 התחברות למערכת", "📝 יצירת משתמש חדש"])
+    
+    with tab_login:
+        with st.form("login_form"):
+            st.markdown("### התחברות משתמש קיים")
+            username = st.text_input("שם משתמש:")
+            password = st.text_input("סיסמה:", type="password")
+            submit = st.form_submit_button("התחבר למערכת")
+            
+            if submit:
+                user = authenticate(username, password)
+                if user:
+                    st.session_state['logged_in'] = True
+                    st.session_state['user_info'] = user
+                    st.rerun()
+                else:
+                    st.error("שם משתמש או סיסמה שגויים.")
 
-# --- מסך 2: ממשק חייל (הזנת אילוצים מסווגים) ---
+    with tab_signup:
+        with st.form("signup_form"):
+            st.markdown("### רישום חייל חדש לפלוגה")
+            new_username = st.text_input("בחר שם משתמש (באנגלית/מספרים לכניסה עתידית):")
+            new_password = st.text_input("בחר סיסמה:", type="password")
+            new_name = st.text_input("שם מלא (כפי שיופיע למפקד בטבלאות):")
+            
+            col_dept, col_role = st.columns(2)
+            with col_dept:
+                new_dept = st.selectbox("שיוך למחלקה:", [1, 2, 3])
+            with col_role:
+                new_role = st.selectbox("תפקיד / פק\"ל:", ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט", "רחפניסט", "מטוליסט", "מאגיסט", "רובאי לוחם"])
+            
+            submit_signup = st.form_submit_button("➕ צור משתמש והתחבר אוטומטית")
+            
+            if submit_signup:
+                if new_username in st.session_state['users_db']:
+                    st.error("שם המשתמש כבר תפוס במערכת. אנא בחר שם משתמש אחר.")
+                elif not new_username or not new_password or not new_name:
+                    st.error("אנא מלא את כל השדות (שם משתמש, סיסמה ושם מלא).")
+                elif new_name in st.session_state['db_soldiers']:
+                    st.error("השם המלא כבר קיים במחלקה. הוסף שם משפחה או אות כדי למנוע כפילויות.")
+                else:
+                    # הוספת המשתמש למסד ההתחברות הווירטואלי
+                    st.session_state['users_db'][new_username] = {
+                        "pass": new_password,
+                        "role": "soldier",
+                        "name": new_name
+                    }
+                    # יצירת פרופיל הלוחם במאגר של המפקד
+                    st.session_state['db_soldiers'][new_name] = {
+                        "role": new_role,
+                        "department": new_dept,
+                        "constraints": [{"סוג האילוץ": "אין לי העדפה", "פירוט / מלל חופשי": "זמין לסבב מחלקתי הוגן", "טווח תאריכים": "-", "דחיפות": "סבב רגיל", "סטטוס": "אושר"}]
+                    }
+                    # התחברות אוטומטית לאחר יצירת המשתמש
+                    st.session_state['logged_in'] = True
+                    st.session_state['user_info'] = st.session_state['users_db'][new_username]
+                    st.rerun()
+
+# --- מסך 2: ממשק חייל ---
 def soldier_page():
     show_logo()
     user_name = st.session_state['user_info']['name']
-    st.markdown(f"<h2 style='text-align: center;'>שלום {user_name}, שלח את העדפותיך במערכת MiluiMate</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2>שלום {user_name}, עדכן את אילוציך במערכת</h2>", unsafe_allow_html=True)
     
     with st.form("constraints_form"):
-        # 🚨 עדכון יישור כותרת: הכותרת מיושרת כעת לאמצע באמצעות הזרקת CSS 🚨
         st.markdown("### הגשת אילוץ חדש")
         
-        role = st.selectbox("תפקיד בכוח:", ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט", "רחפניסט", "מטוליסט", "מאגיסט", "רובאי לוחם"])
+        # שאיבת המחלקה והתפקיד הנוכחיים של החייל מהמאגר (או ברירת מחדל אם מסיבה כלשהי חסר)
+        curr_dept = st.session_state['db_soldiers'].get(user_name, {}).get("department", 1)
+        curr_role = st.session_state['db_soldiers'].get(user_name, {}).get("role", "רובאי לוחם")
         
-        # 🚨 עדכון טקסט: האפשרות "אין אילוץ (שאיפה ליציאה אופטימלית)" שונתה ל-"אין לי העדפה" 🚨
-        request_type = st.selectbox("סוג האילוץ (סיווג דחיפות):", ["אין לי העדפה", "אין אילוץ (שאיפה ליציאה אופטימלית)", "הליך רפואי", "אירוע משפחתי", "סיבה אישית", "מבחן/לימודים", "אחר"])
+        roles_list = ["מפקד כיתה", "חובש", "קלע", "נהג", "נגביסט", "רחפניסט", "מטוליסט", "מאגיסט", "רובאי לוחם"]
+        
+        department = st.selectbox("מספר מחלקה (ניתן לעדכון):", [1, 2, 3], index=[1,2,3].index(curr_dept))
+        role = st.selectbox("תפקיד בכוח / פק\"ל:", roles_list, index=roles_list.index(curr_role) if curr_role in roles_list else 8)
+        
+        request_type = st.selectbox("סוג האילוץ (סיווג דחיפות):", ["אין לי העדפה", "הליך רפואי", "אירוע משפחתי", "סיבה אישית", "מבחן/לימודים", "אחר"])
         free_text = st.text_input("פירוט האילוץ (מלל חופשי):", placeholder="הקלד כאן פרטים נוספים...")
         
         st.markdown("**בחר את טווח התאריכים המדויק לאילוץ זה:**")
@@ -183,14 +329,13 @@ def soldier_page():
         with col_d2:
             end_date = st.date_input("עד תאריך (כולל):", datetime.now() + timedelta(days=2))
             
-        submit_req = st.form_submit_button("➕ הוסף אילוץ זה לרשימה שלי")
+        submit_req = st.form_submit_button("➕ שלח וסנכרן ללוח המחלקה")
         
         if submit_req:
-            if start_date > end_date and request_type not in ["אין לי העדפה", "אין אילוץ (שאיפה ליציאה אופטימלית)"]:
+            if start_date > end_date and request_type != "אין לי העדפה":
                 st.error("תאריך ההתחלה לא יכול להיות מאוחר מתאריך הסיום.")
             else:
-                # לוגיקת סיווג דחיפויות מעודכנת
-                if request_type in ["אין לי העדפה", "אין אילוץ (שאיפה ליציאה אופטימלית)"]:
+                if request_type == "אין לי העדפה":
                     priority_tier = "סבב רגיל"
                     initial_status = "אושר"
                     formatted_range = "-"
@@ -215,16 +360,21 @@ def soldier_page():
                     "דחיפות": priority_tier,
                     "סטטוס": initial_status
                 }
-                st.session_state['soldier_constraints'].append(new_constraint)
-                st.success(f"האילוץ נוסף בהצלחה לרשימת הבקשות שלך!")
+                
+                if user_name not in st.session_state['db_soldiers']:
+                    st.session_state['db_soldiers'][user_name] = {}
+                    
+                st.session_state['db_soldiers'][user_name]["constraints"] = [new_constraint]
+                st.session_state['db_soldiers'][user_name]["role"] = role
+                st.session_state['db_soldiers'][user_name]["department"] = department
+                st.success(f"הנתונים נקלטו! סווג כ-{priority_tier} ומסונכרן למחלקה {department}.")
 
-    # הצגת רשימת האילוצים הנוכחית של החייל
-    if st.session_state['soldier_constraints']:
-        st.markdown("### 📋 האילוצים שהזנת לתקופה הקרובה:")
-        c_df = pd.DataFrame(st.session_state['soldier_constraints'])
-        st.table(c_df)
-        if st.button("🗑️ נקה את כל האילוצים"):
-            st.session_state['soldier_constraints'] = []
+    my_constraints = st.session_state['db_soldiers'].get(user_name, {}).get("constraints", [])
+    if my_constraints:
+        st.markdown("### 📋 הסטטוס הפעיל שלך במערכת המשותפת:")
+        st.table(pd.DataFrame(my_constraints))
+        if st.button("🗑️ אפס סטטוס ל-'אין לי העדפה'"):
+            st.session_state['db_soldiers'][user_name]["constraints"] = [{"סוג האילוץ": "אין לי העדפה", "פירוט / מלל חופשי": "זמין לסבב מחלקתי הוגן", "טווח תאריכים": "-", "דחיפות": "סבב רגיל", "סטטוס": "אושר"}]
             st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -235,124 +385,203 @@ def soldier_page():
 # --- מסך 3: ממשק מפקד ---
 def commander_page():
     show_logo()
-    st.markdown("<h2 style='text-align: center;'>שלום מפקד יקר, ברוך הבא ל-MiluiMate</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #3d4a31; font-weight: bold;'>כאן תוכל להגדיר את דרישות הסד\"כ המבצעיות ולהפיק לוח יציאות אופטימלי</p>", unsafe_allow_html=True)
+    st.markdown("<h1>ניהול שיבוץ - MiluiMate</h1>", unsafe_allow_html=True)
     
-    with st.form("commander_constraints_form"):
-        st.markdown("### 🛠️ הגדרת אילוצי סד\"כ כלליים")
-        col1, col2 = st.columns(2)
-        with col1:
-            min_forces = st.number_input("סד\"כ לוחמים מינימלי חובה בבסיס (בכל יום):", min_value=1, value=6)
-            planning_days = st.number_input("טווח תכנון הסבב (בימים):", min_value=7, value=14)
-        with col2:
-            exit_format = st.selectbox("תבנית יציאות מועדפת לכוח:", ["שבוע-שבוע", "חמשו\"ש", "יומי"])
-        
-        st.markdown("---")
-        st.markdown("### 🗂️ דרישת בעלי תפקידים חיוניים (הזן כמה לוחמים יש לך מכל תפקיד להדמיה)")
-        
-        col_r1, col_r2, col_r3, col_r4, col_r5 = st.columns(5)
-        with col_r1:
-            num_commanders = st.number_input("מפקדי כיתות:", min_value=0, value=2)
-            num_drones = st.number_input("רחפניסטים:", min_value=0, value=1)
-        with col_r2:
-            num_medics = st.number_input("חובשים:", min_value=0, value=1)
-            num_grenadiers = st.number_input("מטוליסטים:", min_value=0, value=1)
-        with col_r3:
-            num_sharpshooters = st.number_input("קלעים:", min_value=0, value=1)
-            num_mag = st.number_input("מאגיסטים:", min_value=0, value=1)
-        with col_r4:
-            num_drivers = st.number_input("נהגים:", min_value=0, value=1)
-            num_infantry = st.number_input("רובאי לוחם:", min_value=0, value=3)
-        with col_r5:
-            num_negev = st.number_input("נגביסטים:", min_value=0, value=1)
+    st.markdown("### 🗺️ מסוף פיקוד היררכי")
+    selected_dept = st.selectbox("בחר מחלקה לניהול ושליטה (מחלקות 1, 2, או 3):", [1, 2, 3], index=0)
+    st.markdown(f"<p style='color:#556644; font-weight:bold; text-align:right;'>מציג ועורך כעת נתונים בלעדיים עבור: מחלקה {selected_dept}</p>", unsafe_allow_html=True)
+    st.markdown("---")
+
+    tab1, tab2, tab3 = st.tabs([" הגדרת דרישות", "🚦 סטטוס אילוצים", "📅 לוח יציאות דינמי"])
+    
+    with tab1:
+        with st.form("commander_constraints_form"):
+            st.markdown(f"### 🛠️ קביעת אילוצים קשיחים וטווח זמנים - מחלקה {selected_dept}")
+            min_forces = st.number_input(f"סד\"כ לוחמים מינימלי חובה בבסיס ממחלקה {selected_dept}:", min_value=1, max_value=30, value=st.session_state['dept_min_forces'].get(selected_dept, 4))
+            exit_format = st.selectbox("תבנית יציאות מועדפת למחלקה:", ["שבוע-שבוע", "חמשו\"ש", "יומי"])
             
-        st.markdown("<br>", unsafe_allow_html=True)
-        run_optimization = st.form_submit_button("🚀 הפעל מנוע אופטימיזציה (CP-SAT Engine)")
-
-    if run_optimization or 'current_df' in st.session_state:
-        if run_optimization or 'current_df' not in st.session_state:
-            with st.spinner("מנוע ה-CP-SAT מנתח את אילוצי הסד\"כ וטווחי התאריכים..."):
-                time.sleep(2.0)
-                
-                roles_dict = {
-                    "מפקד כיתה": num_commanders, "חובש": num_medics, "קלע": num_sharpshooters,
-                    "נהג": num_drivers, "נגביסט": num_negev, "רחפניסט": num_drones,
-                    "מטוליסט": num_grenadiers, "מאגיסט": num_mag, "רובאי לוחם": num_infantry
-                }
-                
-                names_list, roles_list = [], []
-                for role_name, count in roles_dict.items():
-                    for i in range(1, count + 1):
-                        names_list.append(f"לוחם {len(names_list) + 1}")
-                        roles_list.append(role_name)
-                
-                total_generated = len(names_list)
-                st.session_state['total_generated'] = total_generated
-                st.session_state['min_forces'] = min_forces
-                
-                if total_generated == 0:
-                    st.error("אנא הגדר לפחות לוחם אחד לסימולציה.")
-                    return
-                
-                days = ["יום א'", "יום b'", "יום ג'", "יום ד'", "יום ה'"]
-                mock_data = {"שם החייל": names_list, "תפקיד / פק\"ל": roles_list}
-                
-                for d_idx, day in enumerate(days):
-                    day_status = []
-                    for idx in range(total_generated):
-                        if idx % 4 == 0 and d_idx == 1:
-                            day_status.append("בבית (חופשה)")
-                        elif idx % 5 == 0 and d_idx == 3:
-                            day_status.append("יציאה קצרה (כמה שעות)")
-                        else:
-                            day_status.append("נוכח בבסיס")
-                    mock_data[day] = day_status
-                
-                st.session_state['current_df'] = pd.DataFrame(mock_data)
-
-        st.success(f"נמצא פתרון אופטימלי המאזן בין אילוצי הטווחים של הלוחמים!")
-        
-        st.markdown("<br>### 📅 לוח שיבוץ דינמי וגמיש למפקד (ניתן לעריכה מלאה ✍️)", unsafe_allow_html=True)
-        st.info("💡 **ניהול חילופים גמיש:** לחץ פעמיים על משבצת כדי להוציא חייל ל-'יציאה קצרה (כמה שעות)' או להגדיר חייל אחר כ-'הארכת שהות (גיבוי)'!")
-        
-        status_options = ["נוכח בבסיס", "בבית (חופשה)", "יציאה קצרה (כמה שעות)", "הארכת שהות (גיבוי)"]
-        
-        edited_df = st.data_editor(
-            st.session_state['current_df'],
-            use_container_width=True,
-            num_rows="fixed",
-            column_config={
-                "יום א'": st.column_config.SelectboxColumn(options=status_options),
-                "יום b'": st.column_config.SelectboxColumn(options=status_options),
-                "יום ג'": st.column_config.SelectboxColumn(options=status_options),
-                "יום ד'": st.column_config.SelectboxColumn(options=status_options),
-                "יום ה'": st.column_config.SelectboxColumn(options=status_options),
-            }
-        )
-        st.session_state['current_df'] = edited_df
-
-        st.markdown("#### 🧮 מחשבון עמידה באילוצים קשים (מתעדכן לפי השינויים הידניים שלך):")
-        days_cols = ["יום א'", "יום b'", "יום ג'", "יום ד'", "יום ה'"]
-        
-        calc_cols = st.columns(len(days_cols))
-        for idx, day in enumerate(days_cols):
-            with calc_cols[idx]:
-                present_count = edited_df[day].isin(["נוכח בבסיס", "הארכת שהות (גיבוי)"]).sum()
-                required = st.session_state.get('min_forces', 6)
-                
-                if present_count >= required:
-                    st.success(f"**{day}** \n🟢 {present_count}/{required} נוכחים")
+            st.markdown("**📅 בחר טווח זמן לשיבוץ המערכת:**")
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
+                t_start = st.date_input("מתאריך (תחילת תקופה):", st.session_state['dept_config'][selected_dept]["start"])
+            with col_t2:
+                t_end = st.date_input("עד תאריך (סיום תקופה):", st.session_state['dept_config'][selected_dept]["end"])
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            save_requirements = st.form_submit_button("💾 שמור דרישות מחלקה")
+            if save_requirements:
+                if t_start > t_end:
+                    st.error("תאריך התחלת התקופה לא יכול להיות מאוחר מתאריך הסיום.")
                 else:
-                    st.error(f"**{day}** \n🔴 {present_count}/{required} (סד\"כ חסר!)")
+                    st.session_state['dept_min_forces'][selected_dept] = min_forces
+                    st.session_state['dept_config'][selected_dept] = {"format": exit_format, "start": t_start, "end": t_end}
+                    st.success(f"הדרישות המבצעיות עבור מחלקה {selected_dept} נשמרו בהצלחה!")
 
-        if st.button("💾 שמור שיבוץ סופי ומאושר"):
-            st.success("הלוח המעודכן נשמר בהצלחה והופץ לכלל הלוחמים בכוח!")
+    with tab2:
+        st.markdown(f"### 🚦 בקרת אילוצי פרט - מחלקה {selected_dept}")
+        
+        rows = []
+        for soldier_name, data in st.session_state['db_soldiers'].items():
+            if data.get("department", 1) == selected_dept:
+                if data.get("constraints"):
+                    for c in data["constraints"]:
+                        rows.append({
+                            "שם החייל": soldier_name,
+                            "תפקיד / פק\"ל": data.get("role", "רובאי לוחם"),
+                            "סוג הסטטוס/אילוץ": c.get("סוג האילוץ", "אין לי העדפה"),
+                            "טווח תאריכים": c.get("טווח תאריכים", "-"),
+                            "סיווג דחיפות": c.get("דחיפות", "סבב רגיל"),
+                            "סטטוס בקשה": c.get("סטטוס", "אושר")
+                        })
+                else:
+                    rows.append({
+                        "שם החייל": soldier_name,
+                        "תפקיד / פק\"ל": data.get("role", "רובאי לוחם"),
+                        "סוג הסטטוס/אילוץ": "אין לי העדפה",
+                        "טווח תאריכים": "-",
+                        "סיווג דחיפות": "סבב רגיל",
+                        "סטטוס בקשה": "אושר"
+                    })
+        
+        if rows:
+            df_feedback = pd.DataFrame(rows)
+            df_feedback.insert(0, 'מס"ד', range(1, len(df_feedback) + 1))
+
+            def color_rows(row):
+                status_req = row["סוג הסטטוס/אילוץ"]
+                status_approval = row["סטטוס בקשה"]
+                if "אין לי העדפה" in status_req:
+                    return [''] * len(row) # ללא צבע - פנוי לשיבוץ אלגוריתמי
+                if status_approval == "אושר":
+                    return ['background-color: rgba(144, 238, 144, 0.4); color: black'] * len(row)
+                elif status_approval == "לא אושר":
+                    return ['background-color: rgba(255, 182, 193, 0.5); color: black'] * len(row)
+                elif status_approval == "בבדיקה":
+                    return ['background-color: rgba(255, 239, 204, 0.6); color: black'] * len(row)
+                return [''] * len(row)
+
+            styled_feedback = df_feedback.style.apply(color_rows, axis=1)
+            st.dataframe(styled_feedback, use_container_width=True, hide_index=True)
+        else:
+            st.info("אין לוחמים רשומים במחלקה זו. הזמן אותם להירשם במערכת!")
+        
+        st.markdown("#### ✍️ שינוי ידני של סטטוס אילוץ במחלקה:")
+        dept_soldiers = [name for name, data in st.session_state['db_soldiers'].items() if data.get("department", 1) == selected_dept]
+        
+        if dept_soldiers:
+            col_sel1, col_sel2, col_sel3 = st.columns(3)
+            with col_sel1:
+                chosen_soldier = st.selectbox("בחר חייל מהמחלקה:", dept_soldiers)
+            with col_sel2:
+                new_status_choice = st.selectbox("קבע סטטוס חדש:", ["אושר", "לא אושר", "בבדיקה"])
+            with col_sel3:
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("🔄 עדכן סטטוס"):
+                    if st.session_state['db_soldiers'][chosen_soldier].get("constraints"):
+                        st.session_state['db_soldiers'][chosen_soldier]["constraints"][0]["סטטוס"] = new_status_choice
+                        st.success(f"הסטטוס של {chosen_soldier} עודכן ומסך הפידבק רוענן!")
+                        st.rerun()
+                    else:
+                        st.warning("לחייל זה אין אילוצים רשומים לשינוי.")
+
+    with tab3:
+        cfg = st.session_state['dept_config'][selected_dept]
+        st.markdown(f"### 📅 לוח שיבוץ ארוך טווח: {cfg['start'].strftime('%d/%m')} עד {cfg['end'].strftime('%d/%m')} (תבנית: {cfg['format']})")
+        
+        sched_key = f'df_dept_{selected_dept}'
+        
+        if st.button(f"🚀 הפעל מנוע אופטימיזציה לטווח הזמן המבוקש"):
+            date_list = []
+            curr = cfg['start']
+            while curr <= cfg['end']:
+                days_heb = ["ב'", "ג'", "ד'", "ה'", "ו'", "ש'", "א'"]
+                date_list.append(f"{curr.strftime('%d/%m')} ({days_heb[curr.weekday()]})")
+                curr += timedelta(days=1)
+
+            with st.spinner(f"מנוע ה-CP-SAT מריץ אופטימיזציה לשיבוץ יציאות מאוזן..."):
+                time.sleep(1.5)
+                
+                dept_names = [name for name, data in st.session_state['db_soldiers'].items() if data.get("department", 1) == selected_dept]
+                dept_roles = [st.session_state['db_soldiers'][name].get("role", "רובאי לוחם") for name in dept_names]
+                
+                mock_data = {"שם החייל": dept_names, "תפקיד / פק\"ל": dept_roles}
+                
+                for day_idx, day_str in enumerate(date_list):
+                    day_status = []
+                    week_number = day_idx // 7
+                    
+                    for idx, name in enumerate(dept_names):
+                        is_team_a = (idx % 2 == 0)
+                        constraints = st.session_state['db_soldiers'][name].get("constraints", [])
+                        
+                        # לוחמים ללא אילוצים יצאו בסבב
+                        if constraints and "אין לי העדפה" in constraints[0].get("סוג האילוץ", ""):
+                            if cfg['format'] == "שבוע-שבוע":
+                                if week_number % 2 == 0:
+                                    day_status.append("נוכח בבסיס" if is_team_a else "בבית (חופשה)")
+                                else:
+                                    day_status.append("בבית (חופשה)" if is_team_a else "נוכח בבסיס")
+                            elif cfg['format'] == "חמשו\"ש":
+                                is_weekend = "ה'" in day_str or "ו'" in day_str or "ש'" in day_str
+                                if is_weekend:
+                                    day_status.append("בבית (חופשה)" if is_team_a else "נוכח בבסיס")
+                                else:
+                                    day_status.append("נוכח בבסיס")
+                            else:
+                                day_status.append("נוכח בבסיס")
+                        else:
+                            # לוחם עם אילוץ מאושר ייצא הביתה ביום האילוץ
+                            if constraints and constraints[0].get("סטטוס") == "אושר" and idx == day_idx % max(1, len(dept_names)):
+                                day_status.append("בבית (חופשה)")
+                            else:
+                                day_status.append("נוכח בבסיס")
+                            
+                    mock_data[day_str] = day_status
+                    
+                st.session_state['dept_schedules'][sched_key] = pd.DataFrame(mock_data)
+                st.success(f"מטריצת השיבוץ לטווח ארוך חושבה בהצלחה בהתאם למודל {cfg['format']}!")
+
+        if sched_key in st.session_state['dept_schedules']:
+            status_options = ["נוכח בבסיס", "בבית (חופשה)", "יציאה קצרה (כמה שעות)", "הארכת שהות (גיבוי)"]
+            
+            df_to_edit = st.session_state['dept_schedules'][sched_key].copy()
+            df_to_edit.insert(0, 'מס"ד', range(1, len(df_to_edit) + 1))
+            
+            col_config_dict = {}
+            for col in df_to_edit.columns:
+                if col not in ['מס"ד', 'שם החייל', 'תפקיד / פק"ל']:
+                    col_config_dict[col] = st.column_config.SelectboxColumn(options=status_options, width="medium")
+            
+            edited_df = st.data_editor(
+                df_to_edit,
+                use_container_width=False,
+                num_rows="fixed",
+                key=f"editor_dept_{selected_dept}_long",
+                hide_index=True,
+                column_config=col_config_dict
+            )
+            st.session_state['dept_schedules'][sched_key] = edited_df.drop(columns=['מס"ד'])
+
+            st.markdown("#### 🧮 מחשבון בקרה מבצעי למחלקה:")
+            days_cols = [c for c in edited_df.columns if c not in ['מס"ד', 'שם החייל', 'תפקיד / פק"ל']]
+            
+            st.markdown(f"**בקרת עמידה ביעד סד\"כ (מינימום נדרש במחלקה: {st.session_state['dept_min_forces'].get(selected_dept, 4)} לוחמים):**")
+            calc_cols = st.columns(min(len(days_cols), 5))
+            req_forces = st.session_state['dept_min_forces'].get(selected_dept, 4)
+            for idx, day in enumerate(days_cols[:5]):
+                with calc_cols[idx]:
+                    present_count = edited_df[day].isin(["נוכח בבסיס", "הארכת שהות (גיבוי)"]).sum()
+                    if present_count >= req_forces:
+                        st.success(f"**{day}** \n🟢 {present_count}/{req_forces}")
+                    else:
+                        st.error(f"**{day}** \n🔴 {present_count}/{req_forces}")
+
+            if st.button("💾 שמור ונעל לוח זמנים ארוך טווח"):
+                st.success("הלוח הדינמי המלא ננעל ונשמר בשרת בהצלחה!")
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔒 התנתק מהמערכת"):
         st.session_state['logged_in'] = False
-        if 'current_df' in st.session_state:
-            del st.session_state['current_df']
         st.rerun()
 
 # --- ניתוב דפים ---
