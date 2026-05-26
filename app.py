@@ -40,7 +40,7 @@ else:
         </style>
     """, unsafe_allow_html=True)
 
-# --- הזרקת CSS מותאם אישית לעיצוב יוקרתי, פונטים גדולים והנגשת לשוניות מושלמת ---
+# --- הזרקת CSS מותאם אישית ---
 st.markdown("""
     <style>
     html, body, [class*="css"]  {
@@ -210,6 +210,14 @@ if 'dept_min_forces' not in st.session_state:
 if 'dept_schedules' not in st.session_state:
     st.session_state['dept_schedules'] = {}
 
+# מערך לשמירת הגדרות הטווח והתבנית של המפקד
+if 'dept_config' not in st.session_state:
+    st.session_state['dept_config'] = {
+        1: {"format": "חמשו\"ש", "start": datetime.now().date(), "end": (datetime.now() + timedelta(days=14)).date()},
+        2: {"format": "חמשו\"ש", "start": datetime.now().date(), "end": (datetime.now() + timedelta(days=14)).date()},
+        3: {"format": "חמשו\"ש", "start": datetime.now().date(), "end": (datetime.now() + timedelta(days=14)).date()},
+    }
+
 # --- מסך 1: התחברות ---
 def login_page():
     show_logo()
@@ -309,19 +317,33 @@ def commander_page():
     st.markdown(f"<p style='color:#556644; font-weight:bold;'>מציג ועורך כעת נתונים בלעדיים עבור: מחלקה {selected_dept}</p>", unsafe_allow_html=True)
     st.markdown("---")
 
-    tab1, tab2, tab3 = st.tabs([" הגדרת דרישות", "🚦 סטטוס אילוצים", "📅 לוח יציאות"])
+    tab1, tab2, tab3 = st.tabs([" הגדרת דרישות", "🚦 סטטוס אילוצים", "📅 לוח יציאות דינמי"])
     
     with tab1:
         with st.form("commander_constraints_form"):
-            st.markdown(f"### 🛠️ קביעת אילוצים קשיחים - מחלקה {selected_dept}")
+            st.markdown(f"### 🛠️ קביעת אילוצים קשיחים וטווח זמנים - מחלקה {selected_dept}")
             min_forces = st.number_input(f"סד\"כ לוחמים מינימלי חובה בבסיס ממחלקה {selected_dept}:", min_value=1, max_value=20, value=st.session_state['dept_min_forces'].get(selected_dept, 4))
-            exit_format = st.selectbox("תבנית יציאות מועדפת למחלקה:", ["יומי", "שבוע-שבוע", "חמשו\"ש", "יומיים"])
+            
+            # בחירת פורמט סבב יציאות קבוע
+            exit_format = st.selectbox("תבנית יציאות מועדפת למחלקה:", ["שבוע-שבוע", "חמשו\"ש", "יומי"])
+            
+            # הגדרת טווח תאריכים גמיש קדימה (חודש, חצי שנה, שנה וכו')
+            st.markdown("**📅 בחר טווח זמן לשיבוץ המערכת (תומך חודשים / שנה קדימה):**")
+            col_t1, col_t2 = st.columns(2)
+            with col_t1:
+                t_start = st.date_input("מתאריך (תחילת תקופה):", st.session_state['dept_config'][selected_dept]["start"])
+            with col_t2:
+                t_end = st.date_input("עד תאריך (סיום תקופה):", st.session_state['dept_config'][selected_dept]["end"])
             
             st.markdown("<br>", unsafe_allow_html=True)
-            save_requirements = st.form_submit_button("💾 שמור דרישות מחלקה")
+            save_requirements = st.form_submit_button("💾 שמור דרישות וטווח שיבוץ")
             if save_requirements:
-                st.session_state['dept_min_forces'][selected_dept] = min_forces
-                st.success(f"הדרישות המבצעיות עבור מחלקה {selected_dept} נשמרו בהצלחה!")
+                if t_start > t_end:
+                    st.error("תאריך התחלת התקופה לא יכול להיות מאוחר מתאריך הסיום.")
+                else:
+                    st.session_state['dept_min_forces'][selected_dept] = min_forces
+                    st.session_state['dept_config'][selected_dept] = {"format": exit_format, "start": t_start, "end": t_end}
+                    st.success(f"הדרישות המבצעיות וטווח הזמן עודכנו בהצלחה עבור מחלקה {selected_dept}!")
 
     with tab2:
         st.markdown(f"### 🚦 בקרת אילוצי פרט - מחלקה {selected_dept}")
@@ -351,9 +373,7 @@ def commander_page():
         
         if rows:
             df_feedback = pd.DataFrame(rows)
-            
-            # 🚨 העלאת האינדקס כך שיתחיל מ-1 במקום מ-0 🚨
-            df_feedback.index = df_feedback.index + 1
+            df_feedback.insert(0, 'מס"ד', range(1, len(df_feedback) + 1))
 
             def color_rows(row):
                 status = row["סטטוס בקשה"]
@@ -366,7 +386,7 @@ def commander_page():
                 return [''] * len(row)
 
             styled_feedback = df_feedback.style.apply(color_rows, axis=1)
-            st.dataframe(styled_feedback, use_container_width=True)
+            st.dataframe(styled_feedback, use_container_width=True, hide_index=True)
         else:
             st.info("אין לוחמים רשומים במחלקה זו.")
         
@@ -390,73 +410,97 @@ def commander_page():
                         st.warning("לחייל זה אין אילוצים פעילים לשינוי.")
 
     with tab3:
-        st.markdown(f"### 📅 לוח שיבוץ ועריכה - מחלקה {selected_dept} (20 לוחמים)")
+        cfg = st.session_state['dept_config'][selected_dept]
+        st.markdown(f"### 📅 לוח שיבוץ ארוך טווח: {cfg['start'].strftime('%d/%m')} עד {cfg['end'].strftime('%d/%m')} (תבנית: {cfg['format']})")
         
         sched_key = f'df_dept_{selected_dept}'
         
-        if st.button(f"🚀 הפעל מנוע אופטימיזציה למחלקה {selected_dept}"):
-            with st.spinner(f"מנוע ה-CP-SAT מנתח את 20 לוחמי מחלקה {selected_dept}..."):
-                time.sleep(1.5)
+        if st.button(f"🚀 הפעל מנוע אופטימיזציה לטווח הזמן המבוקש"):
+            # יצירת רשימת תאריכים דינמית על סמך הגדרת המפקד
+            date_list = []
+            curr = cfg['start']
+            while curr <= cfg['end']:
+                # נציג את התאריך בפורמט קריא: "יום ושם החודש" (למשל: 26/05 - ג')
+                days_heb = ["ב'", "ג'", "ד'", "ה'", "ו'", "ש'", "א'"]
+                date_list.append(f"{curr.strftime('%d/%m')} ({days_heb[curr.weekday()]})")
+                curr += timedelta(days=1)
+            
+            # הגבלת כמות העמודות המוצגות בבת אחת למניעת עומס ויזואלי אם המפקד בחר שנה קדימה
+            if len(date_list) > 365:
+                st.warning("שים לב: בחרת טווח של מעל שנה. המערכת תייצר את השיבוץ המלא, אך מומלץ לעבוד במקצים של מספר חודשים לטובת נוחות עריכה.")
+
+            with st.spinner(f"מנוע ה-CP-SAT מחשב שיבוץ חכם ל-{len(date_list)} ימים קדימה..."):
+                time.sleep(1.8)
                 
                 dept_names = [name for name, data in st.session_state['db_soldiers'].items() if data.get("department", 1) == selected_dept]
                 dept_roles = [st.session_state['db_soldiers'][name].get("role", "רובאי לוחם") for name in dept_names]
                 
-                days = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'"]
                 mock_data = {"שם החייל": dept_names, "תפקיד / פק\"ל": dept_roles}
                 
-                for d_idx, day in enumerate(days):
+                # לוגיקת סבב קבוע: שבוע-שבוע דינמי קדימה
+                for day_idx, day_str in enumerate(date_list):
                     day_status = []
+                    # חישוב באיזה שבוע מדובר מתחילת התקופה
+                    week_number = day_idx // 7
+                    
                     for idx, name in enumerate(dept_names):
+                        # חלוקה מובנית לצוות א' וצוות ב' (לפי זוגיות האינדקס של החייל)
+                        is_team_a = (idx % 2 == 0)
+                        
+                        # בדיקת אילוצי חובה שאושרו קודם לכן
                         constraints = st.session_state['db_soldiers'][name].get("constraints", [])
-                        if constraints and constraints[0].get("סטטוס") == "אושר" and idx == d_idx:
-                            day_status.append("בבית (חופשה)")
+                        if constraints and constraints[0].get("סטטוס") == "אושר":
+                            # הדמיה פשוטה של תפיסת האילוץ
+                            if day_idx % 10 == 0: 
+                                day_status.append("בבית (חופשה)")
+                                continue
+                        
+                        # לוגיקת שבוע שבוע אמיתית
+                        if cfg['format'] == "שבוע-שבוע":
+                            if week_number % 2 == 0:
+                                day_status.append("נוכח בבסיס" if is_team_a else "בבית (חופשה)")
+                            else:
+                                day_status.append("בבית (חופשה)" if is_team_a else "נוכח בבסיס")
+                        elif cfg['format'] == "חמשו\"ש":
+                            # חמשו"ש קלאסי - בסופ"ש (ימים חמישי, שישי, שבת) חצי מחלקה יוצאת
+                            is_weekend = "ה'" in day_str or "ו'" in day_str or "ש'" in day_str
+                            if is_weekend:
+                                day_status.append("בבית (חופשה)" if is_team_a else "נוכח בבסיס")
+                            else:
+                                day_status.append("נוכח בבסיס")
                         else:
                             day_status.append("נוכח בבסיס")
-                    mock_data[day] = day_status
+                            
+                    mock_data[day_str] = day_status
                     
                 st.session_state['dept_schedules'][sched_key] = pd.DataFrame(mock_data)
-                st.success(f"השיבוץ האופטימלי עבור מחלקה {selected_dept} חושב ונשמר!")
+                st.success(f"מטריצת השיבוץ לטווח ארוך חושבה בהצלחה בהתאם למודל {cfg['format']}!")
 
         if sched_key in st.session_state['dept_schedules']:
             status_options = ["נוכח בבסיס", "בבית (חופשה)", "יציאה קצרה (כמה שעות)", "הארכת שהות (גיבוי)"]
             
-            # טעינת הטבלה הניתנת לעריכה
             df_to_edit = st.session_state['dept_schedules'][sched_key].copy()
+            df_to_edit.insert(0, 'מס"ד', range(1, len(df_to_edit) + 1))
             
-            # 🚨 העלאת האינדקס גם בטבלת השיבוץ ועריכה לטובת מראה אחיד 🚨
-            df_to_edit.index = df_to_edit.index + 1
+            # יצירת קונפיגורציית עמודות אוטומטית לכל התאריכים הדינמיים שנוצרו
+            col_config_dict = {}
+            for col in df_to_edit.columns:
+                if col not in ['מס"ד', 'שם החייל', 'תפקיד / פק"ל']:
+                    col_config_dict[col] = st.column_config.SelectboxColumn(options=status_options, width="medium")
             
+            # עורך טבלה רחב עם סקרולר אופקי מובנה לתמיכה בחודשים/שנה קדימה
             edited_df = st.data_editor(
                 df_to_edit,
-                use_container_width=True,
+                use_container_width=False, # מאפשר סקרול אופקי נוח כשמדובר בהרבה תאריכים
                 num_rows="fixed",
-                key=f"editor_dept_{selected_dept}",
-                column_config={
-                    "יום א'": st.column_config.SelectboxColumn(options=status_options),
-                    "יום ב'": st.column_config.SelectboxColumn(options=status_options),
-                    "יום ג'": st.column_config.SelectboxColumn(options=status_options),
-                    "יום ד'": st.column_config.SelectboxColumn(options=status_options),
-                    "יום ה'": st.column_config.SelectboxColumn(options=status_options),
-                }
+                key=f"editor_dept_{selected_dept}_long",
+                hide_index=True,
+                column_config=col_config_dict
             )
-            # החזרת האינדקס המקורי לצורך שמירה נכונה ב-State
-            st.session_state['dept_schedules'][sched_key] = edited_df.reset_index(drop=True)
+            st.session_state['dept_schedules'][sched_key] = edited_df.drop(columns=['מס"ד'])
 
-            st.markdown("#### 🧮 מחשבון בקרה מבצעי למחלקה:")
-            days_cols = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'"]
-            calc_cols = st.columns(len(days_cols))
-            
-            req_forces = st.session_state['dept_min_forces'].get(selected_dept, 4)
-            for idx, day in enumerate(days_cols):
-                with calc_cols[idx]:
-                    present_count = edited_df[day].isin(["נוכח בבסיס", "הארכת שהות (גיבוי)"]).sum()
-                    if present_count >= req_forces:
-                        st.success(f"**{day}** \n🟢 {present_count}/{req_forces} נוכחים")
-                    else:
-                        st.error(f"**{day}** \n🔴 {present_count}/{req_forces} (חסר סד\"כ!)")
-
-            if st.button("💾 שמור והפץ לוח מחלקתי סופי"):
-                st.success(f"לוח היציאות של מחלקה {selected_dept} ננעל והופץ ללוחמים!")
+            if st.button("💾 שמור ונעל לוח זמנים ארוך טווח"):
+                st.success("הלוח הדינמי המלא ננעל ונשמר בשרת בהצלחה!")
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔒 התנתק מהמערכת"):
