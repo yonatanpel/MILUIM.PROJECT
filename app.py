@@ -328,7 +328,6 @@ def commander_page():
         
         rows = []
         for soldier_name, data in st.session_state['db_soldiers'].items():
-            # שימוש ב-.get() בטוח למניעת KeyError
             if data.get("department", 1) == selected_dept:
                 if data.get("constraints"):
                     for c in data["constraints"]:
@@ -352,6 +351,9 @@ def commander_page():
         
         if rows:
             df_feedback = pd.DataFrame(rows)
+            
+            # 🚨 העלאת האינדקס כך שיתחיל מ-1 במקום מ-0 🚨
+            df_feedback.index = df_feedback.index + 1
 
             def color_rows(row):
                 status = row["סטטוס בקשה"]
@@ -418,8 +420,14 @@ def commander_page():
         if sched_key in st.session_state['dept_schedules']:
             status_options = ["נוכח בבסיס", "בבית (חופשה)", "יציאה קצרה (כמה שעות)", "הארכת שהות (גיבוי)"]
             
+            # טעינת הטבלה הניתנת לעריכה
+            df_to_edit = st.session_state['dept_schedules'][sched_key].copy()
+            
+            # 🚨 העלאת האינדקס גם בטבלת השיבוץ ועריכה לטובת מראה אחיד 🚨
+            df_to_edit.index = df_to_edit.index + 1
+            
             edited_df = st.data_editor(
-                st.session_state['dept_schedules'][sched_key],
+                df_to_edit,
                 use_container_width=True,
                 num_rows="fixed",
                 key=f"editor_dept_{selected_dept}",
@@ -431,7 +439,8 @@ def commander_page():
                     "יום ה'": st.column_config.SelectboxColumn(options=status_options),
                 }
             )
-            st.session_state['dept_schedules'][sched_key] = edited_df
+            # החזרת האינדקס המקורי לצורך שמירה נכונה ב-State
+            st.session_state['dept_schedules'][sched_key] = edited_df.reset_index(drop=True)
 
             st.markdown("#### 🧮 מחשבון בקרה מבצעי למחלקה:")
             days_cols = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'"]
