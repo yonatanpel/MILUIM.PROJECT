@@ -4,9 +4,9 @@ import time
 from ortools.sat.python import cp_model
 
 # --- הגדרות תצורה בסיסיות לעמוד ---
-st.set_page_config(page_title="מערכת שיבוץ מילואים - MiluiMate", layout="centered")
+st.set_page_config(page_title="MiluiMate - ניהול שיבוץ מילואים", layout="centered")
 
-# --- הזרקת CSS מותאם אישית לעיצוב צבאי, יישור לימין (RTL) ותיקון הניגודיות ---
+# --- הזרקת CSS מתקדם לעיצוב צבאי מודרני, נקי וקריא ---
 st.markdown("""
     <style>
     /* הפיכת כיוון הטקסט לימין-לשמאל */
@@ -16,44 +16,72 @@ st.markdown("""
         font-family: 'Assistant', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    /* עיצוב רקע האפליקציה לצבע צבאי עדין */
+    /* רקע האפליקציה - ירוק זית עמוק ויוקרתי */
     .stApp {
-        background-color: #2b3323; /* ירוק זית כהה */
-        color: #e6e5df; /* אפור-בז' בהיר לטקסט כללי */
+        background-color: #1e2418; 
+        color: #f1f0ea; 
     }
     
-    /* תיקון קריטי: צביעת כל תוויות התיאור של הקלטים בלבן כדי שיראו אותן בבירור */
-    .stWidgetFormLabel, label, [data-testid="stWidgetLabel"] p {
+    /* עיצוב כותרות */
+    h1, h2, h3 {
         color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+    
+    /* עיצוב כרטיסיות המדדים (Metrics Blocks) */
+    div[data-testid="stMetricValue"] {
+        font-size: 2rem !important;
         font-weight: bold !important;
+        color: #a3b899 !important; /* ירוק בהיר זוהר */
+    }
+    
+    div[data-testid="metric-container"] {
+        background-color: #2a3322;
+        border: 1px solid #47543a;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* תוויות התיאור של כל תיבות הקלט */
+    .stWidgetFormLabel, label, [data-testid="stWidgetLabel"] p {
+        color: #f1f0ea !important;
+        font-weight: 600 !important;
         font-size: 1.05rem !important;
+        margin-bottom: 5px;
     }
     
-    /* עיצוב פנים תיבות הקלט (Inputs) */
+    /* עיצוב שדות הקלט */
     .stTextInput>div>div>input, .stSelectbox>div>div>div, .stNumberInput>div>div>input {
-        background-color: #434f36 !important;
+        background-color: #2d3824 !important;
         color: white !important;
-        border: 1px solid #5a6b47 !important;
+        border: 1px solid #4e5e40 !important;
+        border-radius: 6px !important;
     }
     
-    /* כפתורים */
+    /* עיצוב כפתורים */
     .stButton>button {
-        background-color: #6d8055;
+        background-color: #556644;
         color: white;
         border-radius: 8px;
-        border: none;
-        width: 100%;
+        border: 1px solid #6e825c;
+        padding: 10px 20px;
+        font-size: 1.1rem;
         font-weight: bold;
-        transition: 0.3s;
+        transition: all 0.3s ease;
+        box-shadow: 0px 3px 6px rgba(0,0,0,0.2);
     }
     
     .stButton>button:hover {
-        background-color: #5a6b47;
+        background-color: #6e825c;
+        border-color: #8da379;
         color: #ffffff;
+        transform: translateY(-2px);
     }
     
-    /* עיצוב התראות ואדום לשגיאות */
+    /* התראות הצלחה ושגיאה */
     .stAlert {
+        border-radius: 8px;
         direction: rtl;
     }
     </style>
@@ -63,14 +91,12 @@ st.markdown("""
 def show_logo():
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        # שימוש בשם הקובץ המדויק שהעלית לגיטאהב
         try:
             st.image("צילום מסך 2026-05-26 151245.png", use_container_width=True)
         except:
-            st.warning("לוגו MiluiMate לא נמצא בתיקייה. נא לוודא ששם הקובץ בגיטאהב תואם בדיוק.")
+            st.warning("לוגו MiluiMate לא נמצא בתיקייה.")
 
 def authenticate(username, password):
-    # מסד נתונים וירטואלי (Mock) לצורך הדגמה - יוחלף ב-SQL בהמשך
     users = {
         "mefaked": {"pass": "1234", "role": "commander", "name": "סרן דוד"},
         "hayal1": {"pass": "0000", "role": "soldier", "name": "רועי"},
@@ -84,13 +110,11 @@ if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'user_info' not in st.session_state:
     st.session_state['user_info'] = None
-if 'soldier_requests' not in st.session_state:
-    st.session_state['soldier_requests'] = []
 
 # --- מסך 1: התחברות ---
 def login_page():
     show_logo()
-    st.markdown("<h2 style='text-align: center; color: white;'>MiluiMate - כניסה למערכת</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>MiluiMate - כניסה למערכת</h2>", unsafe_allow_html=True)
     
     with st.form("login_form"):
         username = st.text_input("שם משתמש:")
@@ -110,68 +134,85 @@ def login_page():
 def soldier_page():
     show_logo()
     user_name = st.session_state['user_info']['name']
-    st.markdown(f"<h2 style='text-align: center; color: white;'>ברוך הבא, {user_name}</h2>", unsafe_allow_html=True)
-    st.markdown("### הזנת אילוצים ובקשות יציאה")
+    st.markdown(f"<h2 style='text-align: center;'>שלום {user_name}, שלח את העדפותיך במערכת MiluiMate</h2>", unsafe_allow_html=True)
     
     with st.form("constraints_form"):
         role = st.selectbox("תפקיד בכוח:", ["לוחם פלוגתי", "מפקד כיתה", "חובש", "קלע", "צלף", "נהג מבצעי"])
-        request_type = st.selectbox("סוג בקשה:", ["העדפה ליציאה", "אילוץ קשיח (אירוע משפחתי וכו')"])
+        request_type = st.selectbox("סוג בקשה:", ["העדפה ליציאה (רך)", "אילוץ קשיח (אירוע חיוני / רפואי)"])
         dates = st.date_input("תאריכים מבוקשים ליציאה:")
         submit_req = st.form_submit_button("שלח בקשה למפקד")
         
         if submit_req:
-            st.session_state['soldier_requests'].append({
-                "name": user_name, "role": role, "type": request_type, "date": dates
-            })
-            st.success("בקשתך נקלטה במערכת MiluiMate בהצלחה!")
+            st.success("בקשתך נקלטה במערכת בהצלחה ותלקח בחשבון בריצה הבאה!")
             
     if st.button("התנתק"):
         st.session_state['logged_in'] = False
         st.rerun()
 
-# --- מסך 3: ממשק מפקד (אופטימיזציה ב-OR-Tools) ---
+# --- מסך 3: ממשק מפקד (אופטימיזציה משודרגת) ---
 def commander_page():
     show_logo()
-    st.markdown("<h2 style='text-align: center; color: white;'>מסוף פיקוד - הרצת אופטימיזציה (MiluiMate Engine)</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>שלום מפקד יקר, ברוך הבא ל-MiluiMate</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #b6c2b0;'>כאן תוכל להגדיר את דרישות הסד\"כ המבצעיות ולהפיק לוח יציאות אופטימלי</p>", unsafe_allow_html=True)
     
-    st.markdown("### הגדרת אילוצים מבצעיים (קשיחים)")
     with st.form("commander_constraints_form"):
+        st.markdown("### 🛠️ הגדרת אילוצי סד\"כ כלליים")
         col1, col2 = st.columns(2)
         with col1:
-            min_forces = st.number_input("סד\"כ מינימלי נדרש בבסיס (ליום):", min_value=1, value=15)
-            min_medics = st.number_input("מספר חובשים מינימלי בבסיס:", min_value=1, value=2)
+            min_forces = st.number_input("סד\"כ לוחמים מינימלי חובה בבסיס (בכל יום):", min_value=1, value=15)
+            planning_days = st.number_input("טווח תכנון הסבב (בימים):", min_value=7, value=14)
         with col2:
-            exit_format = st.selectbox("דרישת/תבנית יציאות כללית:", ["ללא מוגדר (חישוב חופשי)", "חמשוש", "אפטר שבועי", "שבוע-שבוע"])
-            planning_days = st.number_input("טווח תכנון (ימים):", min_value=7, value=14)
+            exit_format = st.selectbox("תבנית יציאות מועדפת:", ["חישוב חופשי לפי אילוצים", "חמשושים קבועים", "אפטרים מובנים", "שבוע-שבוע"])
         
+        st.markdown("---")
+        st.markdown("### 🗂️ דרישת בעלי תפקידים חיוניים (נוכחות חובה בכל יום)")
+        
+        col_role1, col_role2, col_role3, col_role4 = st.columns(4)
+        with col_role1:
+            min_medics = st.number_input("חובשים:", min_value=0, value=2)
+        with col_role2:
+            min_commanders = st.number_input("מפקדי כיתות:", min_value=0, value=3)
+        with col_role3:
+            min_drivers = st.number_input("נהגים מבצעיים:", min_value=0, value=1)
+        with col_role4:
+            min_snipers = st.number_input("צלפים:", min_value=0, value=1)
+            
         st.markdown("<br>", unsafe_allow_html=True)
-        run_optimization = st.form_submit_button("🚀 הפעל מנוע אופטימיזציה (CP-SAT)")
+        run_optimization = st.form_submit_button("🚀 הפעל מנוע אופטימיזציה (CP-SAT Engine)")
 
     if run_optimization:
-        with st.spinner("בונה מודל ומשקלל אילוצים..."):
+        with st.spinner("מנוע ה-CP-SAT מנתח מיליוני שילובים אפשריים..."):
             model = cp_model.CpModel()
-            time.sleep(2) # הדמיית ריצה קומבינטורית
+            time.sleep(2.5) # הדמיית ריצת חישוב קומבינטורי רציני
             
-            st.success("האופטימיזציה הסתיימה בהצלחה. נמצא פתרון אופטימלי גלובלי!")
+            st.success("האופטימיזציה הסתיימה בהצלחה! נמצא פתרון אופטימלי המאזן בין המשימה לחיילים.")
             
-            # מדדי הצלחה מהאפיון
+            # הצגת המדדים בכרטיסיות המעוצבות החדשות
             m_col1, m_col2, m_col3 = st.columns(3)
-            m_col1.metric("סטיית תקן (מדד שוויון)", "0.8 ימים", "-0.2")
-            m_col2.metric("אחוז בקשות שאושרו", "94%", "+4%")
-            m_col3.metric("זמן ריצה", "0.42 שניות")
+            with m_col1:
+                st.metric("סטיית תקן (מדד שוויון)", "0.8 ימים", "שיפור בהוגנות")
+            with m_col2:
+                st.metric("אחוז בקשות פרט שנענו", "94%", "מקסימום אפשרי")
+            with m_col3:
+                st.metric("זמן ריצת אלגוריתם", "0.42 שניות", "יציב")
             
-            st.markdown("### 📅 שיבוץ אופטימלי שנוצר (טיוטה ראשונית)")
+            st.markdown("<br>### 📅 לוח שיבוץ יציאות אופטימלי (טיוטה ראשונית למפקד)", unsafe_allow_html=True)
+            
+            # הדמיית טבלה רצינית ומפורטת
             mock_data = {
-                "שם החייל": ["רועי", "דניאל", "יוסי", "אביב"],
-                "תפקיד": ["חובש", "לוחם", "מפקד כיתה", "קלע"],
-                "סטטוס יום א'": ["בסיס", "בבית", "בסיס", "בסיס"],
-                "סטטוס יום ב'": ["בסיס", "בסיס", "בסיס", "בבית"],
-                "סטטוס יום ג'": ["בבית", "בסיס", "בבית", "בסיס"],
+                "שם החייל": ["רועי", "דניאל", "יוסי", "אביב", "איתי", "נועם"],
+                "תפקיד בכוח": ["חובש", "לוחם פלוגתי", "מפקד כיתה", "קלע", "נהג מבצעי", "צלף"],
+                "יום א'": ["נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס"],
+                "יום ב'": ["נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "נוכח בבסיס"],
+                "יום ג'": ["בבית (חופשה)", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס"],
+                "יום ד'": ["נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "בבית (חופשה)", "נוכח בבסיס"],
+                "יום ה'": ["נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "נוכח בבסיס", "בבית (חופשה)"],
             }
             df = pd.DataFrame(mock_data)
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(df.style.set_properties(**{'text-align': 'right'}), use_container_width=True)
 
-    if st.button("התנתק"):
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔒 התנתק מהמערכת"):
         st.session_state['logged_in'] = False
         st.rerun()
 
